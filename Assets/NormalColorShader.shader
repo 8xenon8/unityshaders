@@ -1,4 +1,4 @@
-﻿Shader "Unlit/NormalShader2"
+﻿Shader "Unlit/NormalColorShader"
 {
 	Properties
 	{
@@ -59,10 +59,7 @@
 				{
 					v2f o;
 					o.pos = UnityObjectToClipPos(v.pos);
-					//o.n = mul(unity_ObjectToWorld, v.n);
-					//o.n = UnityObjectToClipPos(v.n);
 					o.n = v.n;
-					//o.n = normalize(o.n);
 					o.uv = v.uv;
 					return o;
 				}
@@ -80,44 +77,11 @@
 					float2 sp = ComputeScreenPos(n.pos);
 					float3 v = normalize(WorldSpaceViewDir(n.pos));
 
-					//float w = 0;
-					//float r;
-					//float b;
-
-					//float grad = cross(UNITY_MATRIX_IT_MV[2].xyz, n.n);
-
-					//float w = dot(mul(_WorldSpaceLightPos0, unity_ObjectToWorld), normal);
 					float w = dot(WorldSpaceViewDir(n.pos), n.n) / 100;
 
-					//n.n.x = normalize(n.n.x);
-					//n.n.y = normalize(n.n.y);
-					/*
-					if (n.n.x < sqrt(2) || n.n.x > sqrt(2) * -1)
-					{
-						r = n.n.x;
-					}
-					if (n.n.y < sqrt(2) || n.n.y > sqrt(2) * -1)
-					{
-						b = n.n.y;
-					}
-					*/
 					n.n = normalize(n.n);
-					//return float4((2 + n.n.x) / 4, (2 + n.n.y) / 4, (2 + n.n.z) / 4, 1);
 					float4 resultColor = blendColors((n.n.x + 1), (n.n.y + 1), (n.n.z + 1));
-					//float4 resultColor = blendColors((n.n.x + 1) / 2, (n.n.y + 1) / 2, (n.n.z + 1) / 2);
-					/*
-					resultColor.x = r;
-					resultColor.y = w;
-					resultColor.z = b;
-					*/
 					return resultColor;
-					/*
-					float4 c = float4(0, 0, 0, 1);
-					c.x = 1 - (n.n.x + 1) / 3;
-					c.y = 1 - (n.n.y + 1) / 3;
-					c.z = 1 - (n.n.z + 1) / 3;
-					return c;
-					*/
 				}
 
 			ENDCG

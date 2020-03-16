@@ -25,18 +25,24 @@ public class MeshGeneration : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        Mesh m = new Mesh();
-        m.vertices = new Vector3[(width + 1) * (height + 1)];
-        int[] triangles = new int[(width + 1) * (height + 1) * 6];
+        int vsSize = (width + 1) * (height + 1);
 
-        Vector3[] vertices = new Vector3[(width + 1) * (height + 1)];
+        Mesh m = new Mesh();
+        m.vertices = new Vector3[vsSize * 6];
+        int[] triangles = new int[vsSize * 6];
+        Vector3[] vertices = new Vector3[vsSize * 6];
 
         for (int h = 0; h <= height; h++)
         {
             for (int w = 0; w <= width; w++)
             {
                 int l = width * h + w;
-                vertices[(width + 1) * h + w] = new Vector3(h, 0, w);
+                vertices[((width + 1) * h + w) * 6] = new Vector3(h, 0, w);
+                vertices[((width + 1) * h + w) * 6 + 1] = new Vector3(h, 0, w);
+                vertices[((width + 1) * h + w) * 6 + 2] = new Vector3(h, 0, w);
+                vertices[((width + 1) * h + w) * 6 + 3] = new Vector3(h, 0, w);
+                vertices[((width + 1) * h + w) * 6 + 4] = new Vector3(h, 0, w);
+                vertices[((width + 1) * h + w) * 6 + 5] = new Vector3(h, 0, w);
             }
         }
 
@@ -48,16 +54,23 @@ public class MeshGeneration : MonoBehaviour
         {
             for (int w = 0; w < width; w++)
             {
-                int v1 = h * (width + 1) + w;
-                int v2 = h * (width + 1) + w + 1;
-                int v3 = (h + 1) * (width + 1) + w;
-                int v4 = (h + 1) * (width + 1) + w + 1;
+                int v1 = h * (width + 1) * 6 + w * 6;
+                int v2 = h * (width + 1) * 6 + 6 + w * 6 + 1;
+                int v3 = (h + 1) * (width + 1) * 6 + w * 6 + 2;
+                
+                //int v4 = (h + 1) * (width + 1) * 6 + w + 1 + 3;
+                int v4 = (h + 1) * (width + 1) * 6 + w * 6 + 3;
+
+                int v5 = h * (width + 1) * 6 + 6 + w * 6 + 4;
+                int v6 = (h + 1) * (width + 1) * 6 + 6 + w * 6 + 5;
+
                 triangles[triangleCount++] = v1;
                 triangles[triangleCount++] = v2;
                 triangles[triangleCount++] = v3;
-                triangles[triangleCount++] = v3;
-                triangles[triangleCount++] = v2;
+
                 triangles[triangleCount++] = v4;
+                triangles[triangleCount++] = v5;
+                triangles[triangleCount++] = v6;
             }
         }
         m.triangles = triangles;
@@ -70,7 +83,10 @@ public class MeshGeneration : MonoBehaviour
 
         for (int i = 0; i < vertices.Length; i++)
         {
-            uv[i] = new Vector2(vertices[i].x / height, vertices[i].z / width);
+            float x, y;
+            x = vertices[i].x / height;
+            y = vertices[i].z / width;
+            uv[i] = new Vector2(x, y);
         }
 
         m.uv = uv;
@@ -85,7 +101,6 @@ public class MeshGeneration : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        
     }
 
 
