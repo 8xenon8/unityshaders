@@ -17,6 +17,8 @@
 				#pragma vertex vert
 				#pragma fragment frag
 
+				#include "UnityCG.cginc"
+
 				struct appdata
 				{
 					float4 pos : POSITION;
@@ -41,8 +43,8 @@
 					v2f o;
 					o.pos = UnityObjectToClipPos(v.pos);
 					//o.n = mul(unity_ObjectToWorld, v.n);
-					o.n = UnityObjectToClipPos(v.n);
-					//o.n = o.n;
+					//o.n = UnityObjectToClipPos(v.n);
+					o.n = v.n;
 					//o.n = normalize(o.n);
 					o.uv = v.uv;
 					return o;
@@ -50,6 +52,10 @@
 
 				float4 frag(v2f n) : COLOR
 				{
+					float r = n.n.x;
+					float b = n.n.y;
+					return float4(r, 0, b, 1);
+
 					float del = 1 / _GridSize;
 					float thickness = 0.005 / (_GridSize / 2);
 					if ((n.uv.x % del) < thickness || (n.uv.x % del) > 1 - thickness) return float4(1,1,1,1); 

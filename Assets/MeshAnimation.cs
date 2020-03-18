@@ -56,12 +56,12 @@ public class MeshAnimation : MonoBehaviour
             vs[i + 5].y = Mathf.Sin(Time.time * speed[i]) * amp;
             cvs[i + 5].y = Mathf.Sin(Time.time * speed[i]) * amp;
 
-            Debug.DrawLine(transform.position + vs[i], transform.position + vs[i] + m.normals[i]);
-            Debug.DrawLine(transform.position + vs[i + 1], transform.position + vs[i + 1] + m.normals[i + 1]);
-            Debug.DrawLine(transform.position + vs[i + 2], transform.position + vs[i + 2] + m.normals[i + 2]);
-            Debug.DrawLine(transform.position + vs[i + 3], transform.position + vs[i + 3] + m.normals[i + 3]);
-            Debug.DrawLine(transform.position + vs[i + 4], transform.position + vs[i + 4] + m.normals[i + 4]);
-            Debug.DrawLine(transform.position + vs[i + 5], transform.position + vs[i + 5] + m.normals[i + 5]);
+            //Debug.DrawLine(transform.position + vs[i], transform.position + vs[i] + m.normals[i]);
+            //Debug.DrawLine(transform.position + vs[i + 1], transform.position + vs[i + 1] + m.normals[i + 1]);
+            //Debug.DrawLine(transform.position + vs[i + 2], transform.position + vs[i + 2] + m.normals[i + 2]);
+            //Debug.DrawLine(transform.position + vs[i + 3], transform.position + vs[i + 3] + m.normals[i + 3]);
+            //Debug.DrawLine(transform.position + vs[i + 4], transform.position + vs[i + 4] + m.normals[i + 4]);
+            //Debug.DrawLine(transform.position + vs[i + 5], transform.position + vs[i + 5] + m.normals[i + 5]);
 
             //cvs[i].y = 0f;
 

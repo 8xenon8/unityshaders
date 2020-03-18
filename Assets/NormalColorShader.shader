@@ -7,11 +7,13 @@
 		_OutlineColor2("Normal color 2", Color) = (0, 0, 0, 1)
 		_OutlineColor3("Normal color 3", Color) = (0, 0, 0, 1)
 		_GridSize("Grid size", float) = 1
+		_Pointer("Pointer", Vector) = (0, 0, 0, 0)
 	}
 
 	SubShader
 	{
-		Blend Off
+		Blend SrcAlpha OneMinusSrcAlpha
+		//Blend Off
 
 		Pass
 		{
@@ -20,7 +22,6 @@
 				#pragma fragment frag
 
 				#include "UnityCG.cginc"
-				#include "AutoLight.cginc"
 
 				struct appdata
 				{
@@ -52,7 +53,7 @@
 					float resultGreen = _OutlineColor1.y * share1Percent + _OutlineColor2.y * share2Percent + _OutlineColor3.y * share3Percent;
 					float resultBlue = _OutlineColor1.z * share1Percent + _OutlineColor2.z * share2Percent + _OutlineColor3.z * share3Percent;
 	
-					return float4(resultRed, resultGreen, resultBlue, 1);
+					return float4(resultRed, resultGreen, resultBlue, 0.7);
 				}
 
 				v2f vert(appdata v)
@@ -73,14 +74,14 @@
 					if ((abs((n.uv.x - thickness) - (1 - n.uv.y)) % del) <= (thickness)) return float4(1,1,1,1);
 
 					float3 normal = n.n;
-					n.n = UnityObjectToClipPos(n.n);
-					float2 sp = ComputeScreenPos(n.pos);
+					//n.n = UnityObjectToClipPos(n.n);
+					float2 sp = ComputeScreenPos(UnityObjectToClipPos(n.pos));
 					float3 v = normalize(WorldSpaceViewDir(n.pos));
 
-					float w = dot(WorldSpaceViewDir(n.pos), n.n) / 100;
-
-					n.n = normalize(n.n);
+					//n.n = normalize(n.n);
 					float4 resultColor = blendColors((n.n.x + 1), (n.n.y + 1), (n.n.z + 1));
+					//resultColor.x += sp.x / 2000;
+					//resultColor.z += sp.y / 2000;
 					return resultColor;
 				}
 
