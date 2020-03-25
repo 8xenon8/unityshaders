@@ -37,12 +37,12 @@ public class MeshGeneration : MonoBehaviour
             for (int w = 0; w <= width; w++)
             {
                 int l = width * h + w;
-                vertices[((width + 1) * h + w) * 6] = new Vector3(h, 0, w);
-                vertices[((width + 1) * h + w) * 6 + 1] = new Vector3(h, 0, w);
-                vertices[((width + 1) * h + w) * 6 + 2] = new Vector3(h, 0, w);
-                vertices[((width + 1) * h + w) * 6 + 3] = new Vector3(h, 0, w);
-                vertices[((width + 1) * h + w) * 6 + 4] = new Vector3(h, 0, w);
-                vertices[((width + 1) * h + w) * 6 + 5] = new Vector3(h, 0, w);
+                vertices[((width + 1) * h + w) * 6]     = new Vector3(w, h, 0);
+                vertices[((width + 1) * h + w) * 6 + 1] = new Vector3(w, h, 0);
+                vertices[((width + 1) * h + w) * 6 + 2] = new Vector3(w, h, 0);
+                vertices[((width + 1) * h + w) * 6 + 3] = new Vector3(w, h, 0);
+                vertices[((width + 1) * h + w) * 6 + 4] = new Vector3(w, h, 0);
+                vertices[((width + 1) * h + w) * 6 + 5] = new Vector3(w, h, 0);
             }
         }
 
@@ -85,7 +85,7 @@ public class MeshGeneration : MonoBehaviour
         {
             float x, y;
             x = vertices[i].x / height;
-            y = vertices[i].z / width;
+            y = vertices[i].y / width;
             uv[i] = new Vector2(x, y);
         }
 

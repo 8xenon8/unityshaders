@@ -53,7 +53,7 @@
 					float resultGreen = _OutlineColor1.y * share1Percent + _OutlineColor2.y * share2Percent + _OutlineColor3.y * share3Percent;
 					float resultBlue = _OutlineColor1.z * share1Percent + _OutlineColor2.z * share2Percent + _OutlineColor3.z * share3Percent;
 	
-					return float4(resultRed, resultGreen, resultBlue, 0.7);
+					return float4(resultRed, resultGreen, resultBlue + 1, 1);
 				}
 
 				v2f vert(appdata v)

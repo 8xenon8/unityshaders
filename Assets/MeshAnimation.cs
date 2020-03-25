@@ -31,6 +31,33 @@ public class MeshAnimation : MonoBehaviour
 
         float root = Mathf.Sqrt(vs.Length);
 
+        MeshGeneration g = GetComponent<MeshGeneration>();
+
+        int w = g.width;
+        int h = g.height;
+
+        int counter = 0;
+
+        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+        RaycastHit hit;
+        Physics.Raycast(ray, out hit);
+
+        Vector3 offset = Vector3.zero;
+
+        if (hit.collider)
+        {
+            GameObject target = hit.collider.gameObject;
+            offset = target.transform.worldToLocalMatrix.MultiplyVector(hit.point - target.transform.position);
+
+            // uncomment for 0.0...1.0 values
+            //offset.x /= (float)w;
+            //offset.y /= (float)h;
+        }
+
+        Debug.Log(offset);
+
+        float r = 2f;
+
         for (int i = 0; i < vs.Length; i += 6)
         {
             //if (i % root != 0 && i % root != root - 1 && i <= vs.Length - root && i >= root)
@@ -38,23 +65,29 @@ public class MeshAnimation : MonoBehaviour
 
             float amp = .5f;
 
-            vs[i].y = Mathf.Sin(Time.time * speed[i]) * amp;
-            cvs[i].y = Mathf.Sin(Time.time * speed[i]) * amp;
+            counter = i / 6;
 
-            vs[i + 1].y = Mathf.Sin(Time.time * speed[i]) * amp;
-            cvs[i + 1].y = Mathf.Sin(Time.time * speed[i]) * amp;
+            // uncomment for 0.0...1.0 values
+            //float x = (float)(counter % (w + 1)) / (w + 1);
+            //float y = (float)(counter / (w + 1)) / (w + 1);
 
-            vs[i + 2].y = Mathf.Sin(Time.time * speed[i]) * amp;
-            cvs[i + 2].y = Mathf.Sin(Time.time * speed[i]) * amp;
+            float x = (float)(counter % (w + 1));
+            float y = (float)(counter / (w + 1));
 
-            vs[i + 3].y = Mathf.Sin(Time.time * speed[i]) * amp;
-            cvs[i + 3].y = Mathf.Sin(Time.time * speed[i]) * amp;
+            float diffX = Mathf.Abs(x - offset.x);
+            float diffY = Mathf.Abs(y - offset.y);
 
-            vs[i + 4].y = Mathf.Sin(Time.time * speed[i]) * amp;
-            cvs[i + 4].y = Mathf.Sin(Time.time * speed[i]) * amp;
+            float d = Mathf.Sqrt(diffX * diffX + diffY * diffY);
 
-            vs[i + 5].y = Mathf.Sin(Time.time * speed[i]) * amp;
-            cvs[i + 5].y = Mathf.Sin(Time.time * speed[i]) * amp;
+            float offsetZ = 0f;
+
+            if (d < r)
+            {
+                offsetZ = 1f - (float)d / (float)r;
+            }
+
+            //vs[i].y = cvs[i].y = vs[i + 1].y = cvs[i + 1].y = vs[i + 2].y = cvs[i + 2].y = vs[i + 3].y = cvs[i + 3].y = vs[i + 4].y = cvs[i + 4].y = vs[i + 5].y = cvs[i + 5].y = Mathf.Sin(30 * Mathf.Sqrt(x * x + y * y) + Time.time) * 5f;
+            vs[i].z = cvs[i].z = vs[i + 1].z = cvs[i + 1].z = vs[i + 2].z = cvs[i + 2].z = vs[i + 3].z = cvs[i + 3].z = vs[i + 4].z = cvs[i + 4].z = vs[i + 5].z = cvs[i + 5].z =  offsetZ * offsetZ * 3;
 
             //Debug.DrawLine(transform.position + vs[i], transform.position + vs[i] + m.normals[i]);
             //Debug.DrawLine(transform.position + vs[i + 1], transform.position + vs[i + 1] + m.normals[i + 1]);

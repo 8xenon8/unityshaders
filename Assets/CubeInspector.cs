@@ -9,7 +9,6 @@ public class CubeInspector : MonoBehaviour
     void Start()
     {
         m = gameObject.GetComponent<MeshFilter>().mesh;
-        Debug.Log(m.vertices);
     }
 
     // Update is called once per frame
