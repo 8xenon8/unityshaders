@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using UnityEditor;
 using UnityEngine;
 
 public class MeshGeneration : MonoBehaviour
@@ -7,23 +8,13 @@ public class MeshGeneration : MonoBehaviour
 
     public int width;
     public int height;
+    public float ratio = 1;
 
-    public float gridSize = 2f;
+    public Material material;
 
-    //= new Vector3[]
-    //{
-    //    new Vector3(0, 0, 0),
-    //    new Vector3(1, 0, 0),
-    //    new Vector3(0, 1, 0),
-    //    new Vector3(1, 1, 0),
-    //    new Vector3(0, 0, 1),
-    //    new Vector3(1, 0, 1),
-    //    new Vector3(0, 1, 1),
-    //    new Vector3(1, 1, 1),
-    //};
+    public Vector3[][,] verticesAccess;
 
-    // Start is called before the first frame update
-    void Start()
+    public void Generate()
     {
         int vsSize = (width + 1) * (height + 1);
 
@@ -37,12 +28,12 @@ public class MeshGeneration : MonoBehaviour
             for (int w = 0; w <= width; w++)
             {
                 int l = width * h + w;
-                vertices[((width + 1) * h + w) * 6]     = new Vector3(w, h, 0);
-                vertices[((width + 1) * h + w) * 6 + 1] = new Vector3(w, h, 0);
-                vertices[((width + 1) * h + w) * 6 + 2] = new Vector3(w, h, 0);
-                vertices[((width + 1) * h + w) * 6 + 3] = new Vector3(w, h, 0);
-                vertices[((width + 1) * h + w) * 6 + 4] = new Vector3(w, h, 0);
-                vertices[((width + 1) * h + w) * 6 + 5] = new Vector3(w, h, 0);
+                vertices[((width + 1) * h + w) * 6]     = new Vector3(w, h * ratio, 0);
+                vertices[((width + 1) * h + w) * 6 + 1] = new Vector3(w, h * ratio, 0);
+                vertices[((width + 1) * h + w) * 6 + 2] = new Vector3(w, h * ratio, 0);
+                vertices[((width + 1) * h + w) * 6 + 3] = new Vector3(w, h * ratio, 0);
+                vertices[((width + 1) * h + w) * 6 + 4] = new Vector3(w, h * ratio, 0);
+                vertices[((width + 1) * h + w) * 6 + 5] = new Vector3(w, h * ratio, 0);
             }
         }
 
@@ -58,9 +49,7 @@ public class MeshGeneration : MonoBehaviour
                 int v2 = h * (width + 1) * 6 + 6 + w * 6 + 1;
                 int v3 = (h + 1) * (width + 1) * 6 + w * 6 + 2;
                 
-                //int v4 = (h + 1) * (width + 1) * 6 + w + 1 + 3;
                 int v4 = (h + 1) * (width + 1) * 6 + w * 6 + 3;
-
                 int v5 = h * (width + 1) * 6 + 6 + w * 6 + 4;
                 int v6 = (h + 1) * (width + 1) * 6 + 6 + w * 6 + 5;
 
@@ -96,11 +85,46 @@ public class MeshGeneration : MonoBehaviour
 
         MeshCollider c = gameObject.AddComponent<MeshCollider>();
         c.sharedMesh.vertices = m.vertices;
+
+        GetComponent<MeshRenderer>().material = material;
+
+        m.bounds = new Bounds(Vector3.zero, Vector3.one * 10000f);
+    }
+
+    public Vector3[] GetVertices(int x, int y)
+    {
+        Mesh m = GetComponent<MeshFilter>().mesh;
+        
+        return new Vector3[]
+        {
+            m.vertices[((width + 1) * y + x) * 6],
+            m.vertices[((width + 1) * y + x) * 6 + 1],
+            m.vertices[((width + 1) * y + x) * 6 + 2],
+            m.vertices[((width + 1) * y + x) * 6 + 3],
+            m.vertices[((width + 1) * y + x) * 6 + 4],
+            m.vertices[((width + 1) * y + x) * 6 + 5],
+        };
+    }
+
+    public void SetVertices(int x, int y, Vector3 pos)
+    {
+        Mesh m = gameObject.GetComponent<MeshFilter>().mesh;
+        Vector3[] vs = m.vertices;
+
+        vs[((width + 1) * y + x) * 6] = pos;
+        vs[((width + 1) * y + x) * 6 + 1] = pos;
+        vs[((width + 1) * y + x) * 6 + 2] = pos;
+        vs[((width + 1) * y + x) * 6 + 3] = pos;
+        vs[((width + 1) * y + x) * 6 + 4] = pos;
+        vs[((width + 1) * y + x) * 6 + 5] = pos;
+
+        gameObject.GetComponent<MeshFilter>().mesh.vertices = vs;
     }
 
     // Update is called once per frame
     void Update()
     {
+        
     }
 
 

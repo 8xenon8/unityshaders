@@ -64,5 +64,13 @@ public class CameraFollow : MonoBehaviour
         transform.position += Vector3.up * angleY * zoom * -1;
 
         transform.LookAt(player.transform.position);
+
+        if (Input.GetMouseButton(1))
+        {
+            Camera.main.fieldOfView = 10;
+        } else
+        {
+            Camera.main.fieldOfView = 60;
+        }
     }
 }

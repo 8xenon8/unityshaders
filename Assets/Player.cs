@@ -17,29 +17,51 @@ public class Player : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+
+        Vector3 pos = transform.position;
+        Quaternion rotation = Camera.main.transform.rotation;
+
+        //Vector2 direction = new Vector2(transform.position Camera.main.transform);
+
+        float angle = Camera.main.transform.rotation.eulerAngles.y;
+
+        Vector3 direction;
+
         if (Input.GetKey("w"))
         {
-            ball.AddForce(Camera.main.transform.forward * speed * Time.deltaTime, ForceMode.Force);
+            direction = Camera.main.transform.forward;
+            direction.y = 0;
+            direction = direction.normalized;
+            ball.AddForce(direction * speed * Time.deltaTime, ForceMode.Force);
         }
 
         if (Input.GetKey("s"))
         {
-            ball.AddForce(Camera.main.transform.forward * speed * Time.deltaTime * -1, ForceMode.Force);
+            direction = Camera.main.transform.forward;
+            direction.y = 0;
+            direction = direction.normalized;
+            ball.AddForce(direction * speed * Time.deltaTime * -1, ForceMode.Force);
         }
 
         if (Input.GetKey("d"))
         {
-            ball.AddForce(Camera.main.transform.right * speed * Time.deltaTime, ForceMode.Force);
+            direction = Camera.main.transform.right;
+            direction.y = 0;
+            direction = direction.normalized;
+            ball.AddForce(direction * speed * Time.deltaTime, ForceMode.Force);
         }
 
         if (Input.GetKey("a"))
         {
-            ball.AddForce(Camera.main.transform.right * speed * Time.deltaTime * -1, ForceMode.Force);
+            direction = Camera.main.transform.right;
+            direction.y = 0;
+            direction = direction.normalized;
+            ball.AddForce(direction * speed * Time.deltaTime * -1, ForceMode.Force);
         }
 
         ball.velocity = new Vector3(
             ball.velocity.x * 0.95f,
-            ball.velocity.y,
+            0,
             ball.velocity.z * 0.95f
         );
     }
