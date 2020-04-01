@@ -106,26 +106,51 @@ public class MeshGeneration : MonoBehaviour
         };
     }
 
-    public void SetVertices(int x, int y, Vector3 pos)
+    public void SetVertices(int x, int y, Vector3[] pos)
     {
         Mesh m = gameObject.GetComponent<MeshFilter>().mesh;
         Vector3[] vs = m.vertices;
 
-        vs[((width + 1) * y + x) * 6] = pos;
-        vs[((width + 1) * y + x) * 6 + 1] = pos;
-        vs[((width + 1) * y + x) * 6 + 2] = pos;
-        vs[((width + 1) * y + x) * 6 + 3] = pos;
-        vs[((width + 1) * y + x) * 6 + 4] = pos;
-        vs[((width + 1) * y + x) * 6 + 5] = pos;
+        vs[((width + 1) * y + x) * 6] = pos[0];
+        vs[((width + 1) * y + x) * 6 + 1] = pos[1];
+        vs[((width + 1) * y + x) * 6 + 2] = pos[2];
+        vs[((width + 1) * y + x) * 6 + 3] = pos[3];
+        vs[((width + 1) * y + x) * 6 + 4] = pos[4];
+        vs[((width + 1) * y + x) * 6 + 5] = pos[5];
 
         gameObject.GetComponent<MeshFilter>().mesh.vertices = vs;
+        gameObject.GetComponent<MeshCollider>().sharedMesh = m;
+        gameObject.GetComponent<MeshCollider>().sharedMesh.vertices = vs;
     }
 
-    // Update is called once per frame
-    void Update()
+    public Vector3[] GetTriangleVerticesAtPosition(int x, int y)
     {
-        
+        Mesh m = gameObject.GetComponent<MeshFilter>().mesh;
+        return new Vector3[6]
+        {
+            m.vertices[y * (width + 1) * 6 + x * 6],
+            m.vertices[y * (width + 1) * 6 + 6 + x * 6 + 1],
+            m.vertices[(y + 1) * (width + 1) * 6 + x * 6 + 2],
+
+            m.vertices[(y + 1) * (width + 1) * 6 + x * 6 + 3],
+            m.vertices[y * (width + 1) * 6 + 6 + x * 6 + 4],
+            m.vertices[(y + 1) * (width + 1) * 6 + 6 + x * 6 + 5],
+        };
     }
 
+    public void GetTriangleVerticesAtPosition(int x, int y, Vector3[] vertices)
+    {
+        Mesh m = gameObject.GetComponent<MeshFilter>().mesh;
+        Vector3[] vs = m.vertices;
 
+        vs[y * (width + 1) * 6 + x * 6] = vertices[0];
+        vs[y * (width + 1) * 6 + 6 + x * 6 + 1] = vertices[1];
+        vs[(y + 1) * (width + 1) * 6 + x * 6 + 2] = vertices[2];
+
+        vs[(y + 1) * (width + 1) * 6 + x * 6 + 3] = vertices[3];
+        vs[y * (width + 1) * 6 + 6 + x * 6 + 4] = vertices[4];
+        vs[(y + 1) * (width + 1) * 6 + 6 + x * 6 + 5] = vertices[5];
+
+        m.vertices = vs;
+    }
 }

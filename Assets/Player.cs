@@ -61,7 +61,7 @@ public class Player : MonoBehaviour
 
         ball.velocity = new Vector3(
             ball.velocity.x * 0.95f,
-            0,
+            ball.velocity.y,
             ball.velocity.z * 0.95f
         );
     }
