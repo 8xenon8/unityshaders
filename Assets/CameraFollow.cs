@@ -19,6 +19,8 @@ public class CameraFollow : MonoBehaviour
     float zoomMin = 1.5f;
     float zoomMax = 10f;
 
+    public bool disabled = false;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -26,6 +28,12 @@ public class CameraFollow : MonoBehaviour
     }
     void Update()
     {
+
+        if (disabled)
+        {
+            return;
+        }
+
         zoom += Input.mouseScrollDelta.y;
 
         zoom = Mathf.Min(Mathf.Max(zoom, zoomMin), zoomMax);

@@ -8,149 +8,144 @@ public class MeshGeneration : MonoBehaviour
 
     public int width;
     public int height;
-    public float ratio = 1;
+    public float ratioX = 1;
+    public float ratioY = 1;
 
     public Material material;
 
-    public Vector3[][,] verticesAccess;
+    public Vector3[,][] verticesAccess;
+    public Triangle[] triangleAccess;
+
+    public struct Triangle
+    {
+        public Vector2 coords;
+        public int[] verticeIndexes;
+        public Vector3[] verticeCoords;
+    }
+
+    void Start()
+    {
+        Generate();
+    }
 
     public void Generate()
     {
-        int vsSize = (width + 1) * (height + 1);
-
-        Mesh m = new Mesh();
-        m.vertices = new Vector3[vsSize * 6];
-        int[] triangles = new int[vsSize * 6];
-        Vector3[] vertices = new Vector3[vsSize * 6];
-
-        for (int h = 0; h <= height; h++)
-        {
-            for (int w = 0; w <= width; w++)
-            {
-                int l = width * h + w;
-                vertices[((width + 1) * h + w) * 6]     = new Vector3(w, h * ratio, 0);
-                vertices[((width + 1) * h + w) * 6 + 1] = new Vector3(w, h * ratio, 0);
-                vertices[((width + 1) * h + w) * 6 + 2] = new Vector3(w, h * ratio, 0);
-                vertices[((width + 1) * h + w) * 6 + 3] = new Vector3(w, h * ratio, 0);
-                vertices[((width + 1) * h + w) * 6 + 4] = new Vector3(w, h * ratio, 0);
-                vertices[((width + 1) * h + w) * 6 + 5] = new Vector3(w, h * ratio, 0);
-            }
-        }
-
-        m.vertices = vertices;
-
-        int triangleCount = 0;
-
-        for (int h = 0; h < height; h++)
-        {
-            for (int w = 0; w < width; w++)
-            {
-                int v1 = h * (width + 1) * 6 + w * 6;
-                int v2 = h * (width + 1) * 6 + 6 + w * 6 + 1;
-                int v3 = (h + 1) * (width + 1) * 6 + w * 6 + 2;
-                
-                int v4 = (h + 1) * (width + 1) * 6 + w * 6 + 3;
-                int v5 = h * (width + 1) * 6 + 6 + w * 6 + 4;
-                int v6 = (h + 1) * (width + 1) * 6 + 6 + w * 6 + 5;
-
-                triangles[triangleCount++] = v1;
-                triangles[triangleCount++] = v2;
-                triangles[triangleCount++] = v3;
-
-                triangles[triangleCount++] = v4;
-                triangles[triangleCount++] = v5;
-                triangles[triangleCount++] = v6;
-            }
-        }
-        m.triangles = triangles;
 
         MeshFilter filter = gameObject.AddComponent<MeshFilter>();
-        filter.mesh = m;
-        MeshRenderer r = gameObject.AddComponent<MeshRenderer>();
+        MeshRenderer renderer = gameObject.AddComponent<MeshRenderer>();
+        MeshCollider collider = gameObject.AddComponent<MeshCollider>();
+        Mesh mesh = filter.mesh;
 
-        Vector2[] uv = new Vector2[vertices.Length];
+        renderer.material = material;
 
-        for (int i = 0; i < vertices.Length; i++)
+        List<Vector3> vertices = new List<Vector3>();
+        List<int> triangles = new List<int>();
+
+        verticesAccess = new Vector3[width + 1, height + 1][];
+        triangleAccess = new Triangle[width * height * 2];
+
+        for (int i = 0; i < height + 1; i++)
         {
-            float x, y;
-            x = vertices[i].x / height;
-            y = vertices[i].y / width;
-            uv[i] = new Vector2(x, y);
+            for (int j = 0; j < width + 1; j++)
+            {
+                verticesAccess[j, i] = new Vector3[6]
+                {
+                    new Vector3(-1, -1, -1),
+                    new Vector3(-1, -1, -1),
+                    new Vector3(-1, -1, -1),
+                    new Vector3(-1, -1, -1),
+                    new Vector3(-1, -1, -1),
+                    new Vector3(-1, -1, -1)
+                };
+            }
         }
 
-        m.uv = uv;
+        int verticeCount = 0;
+        int triangleCount = 0;
 
-        m.RecalculateNormals();
-        m.RecalculateBounds();
-
-        MeshCollider c = gameObject.AddComponent<MeshCollider>();
-        c.sharedMesh.vertices = m.vertices;
-
-        GetComponent<MeshRenderer>().material = material;
-
-        m.bounds = new Bounds(Vector3.zero, Vector3.one * 10000f);
-    }
-
-    public Vector3[] GetVertices(int x, int y)
-    {
-        Mesh m = GetComponent<MeshFilter>().mesh;
-        
-        return new Vector3[]
+        for (int i = 0; i < height; i++)
         {
-            m.vertices[((width + 1) * y + x) * 6],
-            m.vertices[((width + 1) * y + x) * 6 + 1],
-            m.vertices[((width + 1) * y + x) * 6 + 2],
-            m.vertices[((width + 1) * y + x) * 6 + 3],
-            m.vertices[((width + 1) * y + x) * 6 + 4],
-            m.vertices[((width + 1) * y + x) * 6 + 5],
-        };
-    }
+            for (int j = 0; j < width; j++)
+            {
+                Vector3[] triangle1 = new Vector3[3]
+                {
+                    new Vector3(j * ratioX, 0, (i + 1) * ratioY),
+                    new Vector3((j + 1) * ratioX, 0, i * ratioY),
+                    new Vector3(j * ratioX, 0, i * ratioY),
+                };
 
-    public void SetVertices(int x, int y, Vector3[] pos)
-    {
-        Mesh m = gameObject.GetComponent<MeshFilter>().mesh;
-        Vector3[] vs = m.vertices;
+                Vector3[] triangle2 = new Vector3[3]
+                {
+                    new Vector3((j + 1) * ratioX, 0, (i + 1) * ratioY),
+                    new Vector3((j + 1) * ratioX, 0, i * ratioY),
+                    new Vector3(j * ratioX, 0, (i + 1) * ratioY),
+                };
+                
+                vertices.Add(triangle1[0]);
+                verticesAccess[(int)triangle1[0].x, (int)triangle1[0].z][0] = triangle1[0];
 
-        vs[((width + 1) * y + x) * 6] = pos[0];
-        vs[((width + 1) * y + x) * 6 + 1] = pos[1];
-        vs[((width + 1) * y + x) * 6 + 2] = pos[2];
-        vs[((width + 1) * y + x) * 6 + 3] = pos[3];
-        vs[((width + 1) * y + x) * 6 + 4] = pos[4];
-        vs[((width + 1) * y + x) * 6 + 5] = pos[5];
+                vertices.Add(triangle1[1]);
+                verticesAccess[(int)triangle1[1].x, (int)triangle1[1].z][1] = triangle1[1];
 
-        gameObject.GetComponent<MeshFilter>().mesh.vertices = vs;
-        gameObject.GetComponent<MeshCollider>().sharedMesh = m;
-        gameObject.GetComponent<MeshCollider>().sharedMesh.vertices = vs;
-    }
+                vertices.Add(triangle1[2]);
+                verticesAccess[(int)triangle1[2].x, (int)triangle1[2].z][2] = triangle1[2];
 
-    public Vector3[] GetTriangleVerticesAtPosition(int x, int y)
-    {
-        Mesh m = gameObject.GetComponent<MeshFilter>().mesh;
-        return new Vector3[6]
-        {
-            m.vertices[y * (width + 1) * 6 + x * 6],
-            m.vertices[y * (width + 1) * 6 + 6 + x * 6 + 1],
-            m.vertices[(y + 1) * (width + 1) * 6 + x * 6 + 2],
+                vertices.Add(triangle2[0]);
+                verticesAccess[(int)triangle2[0].x, (int)triangle2[0].z][3] = triangle2[0];
 
-            m.vertices[(y + 1) * (width + 1) * 6 + x * 6 + 3],
-            m.vertices[y * (width + 1) * 6 + 6 + x * 6 + 4],
-            m.vertices[(y + 1) * (width + 1) * 6 + 6 + x * 6 + 5],
-        };
-    }
+                vertices.Add(triangle2[1]);
+                verticesAccess[(int)triangle2[1].x, (int)triangle2[1].z][4] = triangle2[1];
 
-    public void GetTriangleVerticesAtPosition(int x, int y, Vector3[] vertices)
-    {
-        Mesh m = gameObject.GetComponent<MeshFilter>().mesh;
-        Vector3[] vs = m.vertices;
+                vertices.Add(triangle2[2]);
+                verticesAccess[(int)triangle2[2].x, (int)triangle2[2].z][5] = triangle2[2];
 
-        vs[y * (width + 1) * 6 + x * 6] = vertices[0];
-        vs[y * (width + 1) * 6 + 6 + x * 6 + 1] = vertices[1];
-        vs[(y + 1) * (width + 1) * 6 + x * 6 + 2] = vertices[2];
+                Triangle t1 = new Triangle();
+                t1.coords = new Vector2(j, i);
+                t1.verticeCoords = new Vector3[3]
+                {
+                    new Vector3(j, 0, i + 1),
+                    new Vector3(j + 1, 0, i),
+                    new Vector3(j, 0, i),
+                };
 
-        vs[(y + 1) * (width + 1) * 6 + x * 6 + 3] = vertices[3];
-        vs[y * (width + 1) * 6 + 6 + x * 6 + 4] = vertices[4];
-        vs[(y + 1) * (width + 1) * 6 + 6 + x * 6 + 5] = vertices[5];
+                Triangle t2 = new Triangle();
+                t2.coords = new Vector2(j, i);
+                t2.verticeCoords = new Vector3[3]
+                {
+                    new Vector3(j + 1, 0, i + 1),
+                    new Vector3(j + 1, 0, i),
+                    new Vector3(j, 0, i + 1),
+                };
 
-        m.vertices = vs;
+                t1.verticeIndexes = new int[3];
+                t2.verticeIndexes = new int[3];
+
+                triangles.Add(verticeCount++);
+                t1.verticeIndexes[0] = verticeCount;
+                triangles.Add(verticeCount++);
+                t1.verticeIndexes[1] = verticeCount;
+                triangles.Add(verticeCount++);
+                t1.verticeIndexes[2] = verticeCount;
+
+                triangles.Add(verticeCount++);
+                t2.verticeIndexes[0] = verticeCount;
+                triangles.Add(verticeCount++);
+                t2.verticeIndexes[1] = verticeCount;
+                triangles.Add(verticeCount++);
+                t2.verticeIndexes[1] = verticeCount;
+
+                triangleAccess[triangleCount++] = t1;
+                triangleAccess[triangleCount++] = t2;
+            }
+        }
+
+        Vector3[] verticesAr = vertices.ToArray();
+        int[] trianglesAr = triangles.ToArray();
+
+        mesh.vertices = verticesAr;
+        mesh.triangles = trianglesAr;
+
+        collider.sharedMesh = mesh;
+        filter.mesh = mesh;
     }
 }

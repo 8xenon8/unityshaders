@@ -34,8 +34,8 @@ public class MeshAnimation : MonoBehaviour
 
         //MeshGeneration g = GetComponent<MeshGeneration>();
 
-        int w = 100;
-        int h = 100;
+        int w = 30;
+        int h = 30;
 
         int counter = 0;
 
@@ -45,7 +45,7 @@ public class MeshAnimation : MonoBehaviour
 
         Vector3 offset = Vector3.zero;
 
-        if (hit.collider)
+        if (hit.collider && hit.collider.gameObject == gameObject)
         {
             GameObject target = hit.collider.gameObject;
             offset = target.transform.worldToLocalMatrix.MultiplyVector(hit.point - target.transform.position);
@@ -57,7 +57,7 @@ public class MeshAnimation : MonoBehaviour
 
         float r = 2f;
 
-        for (int i = 0; i < vs.Length; i++)
+        for (int i = 0; i < vs.Length; i+=6)
         {
             //if (i % root != 0 && i % root != root - 1 && i <= vs.Length - root && i >= root)
             //{
@@ -85,9 +85,10 @@ public class MeshAnimation : MonoBehaviour
                 offsetZ = 1f - (float)d / (float)r;
             }
 
-            vs[i].y = cvs[i].y = Mathf.Sin(30 * Mathf.Sqrt(x * x + y * y) + Time.time) * 5f;
+            //vs[i].y = cvs[i].y = Mathf.Sin(30 * Mathf.Sqrt(x * x + y * y) + Time.time) * 5f;
             //vs[i].z = vs[i + 1].z = vs[i + 2].z = vs[i + 3].z = vs[i + 4].z = vs[i + 5].z = Mathf.Sin(30 * Mathf.Sqrt(x * x + y * y) + Time.time) * 5f;
             //vs[i].z = cvs[i].z = vs[i + 1].z = cvs[i + 1].z = vs[i + 2].z = cvs[i + 2].z = vs[i + 3].z = cvs[i + 3].z = vs[i + 4].z = cvs[i + 4].z = vs[i + 5].z = cvs[i + 5].z = Random.value * 2;
+            vs[i].z = cvs[i].z = vs[i + 1].z = cvs[i + 1].z = vs[i + 2].z = cvs[i + 2].z = vs[i + 3].z = cvs[i + 3].z = vs[i + 4].z = cvs[i + 4].z = vs[i + 5].z = cvs[i + 5].z = offsetZ;
 
             //cvs[i].y = 0f;
 

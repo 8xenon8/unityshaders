@@ -21,7 +21,7 @@ public class ImageProjection : MonoBehaviour
 
         float ratio = (float)image.height / (float)image.width;
 
-        generator.ratio = ratio;
+        generator.ratioX = ratio;
 
         generator.Generate();
 
@@ -83,7 +83,7 @@ public class ImageProjection : MonoBehaviour
                     {
                         p1, p2, p3, p4, p5, p6
                     };
-                    GetComponent<MeshGeneration>().SetVertices(j, i, posAr);
+                    //GetComponent<MeshGeneration>().SetVertices(j, i, posAr);
                 }
             }
         }
