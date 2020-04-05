@@ -13,7 +13,7 @@ public class MeshGeneration : MonoBehaviour
 
     public Material material;
 
-    public Vector3[,][] verticesAccess;
+    public List<int>[,] verticesAccess;
     public Triangle[] triangleAccess;
 
     public struct Triangle
@@ -26,6 +26,11 @@ public class MeshGeneration : MonoBehaviour
     void Start()
     {
         Generate();
+    }
+
+    void Update()
+    {
+        Debug.Log("123");
     }
 
     public void Generate()
@@ -41,22 +46,14 @@ public class MeshGeneration : MonoBehaviour
         List<Vector3> vertices = new List<Vector3>();
         List<int> triangles = new List<int>();
 
-        verticesAccess = new Vector3[width + 1, height + 1][];
+        verticesAccess = new List<int>[width + 1, height + 1];
         triangleAccess = new Triangle[width * height * 2];
 
         for (int i = 0; i < height + 1; i++)
         {
             for (int j = 0; j < width + 1; j++)
             {
-                verticesAccess[j, i] = new Vector3[6]
-                {
-                    new Vector3(-1, -1, -1),
-                    new Vector3(-1, -1, -1),
-                    new Vector3(-1, -1, -1),
-                    new Vector3(-1, -1, -1),
-                    new Vector3(-1, -1, -1),
-                    new Vector3(-1, -1, -1)
-                };
+                verticesAccess[j, i] = new List<int>();
             }
         }
 
@@ -82,22 +79,11 @@ public class MeshGeneration : MonoBehaviour
                 };
                 
                 vertices.Add(triangle1[0]);
-                verticesAccess[(int)triangle1[0].x, (int)triangle1[0].z][0] = triangle1[0];
-
                 vertices.Add(triangle1[1]);
-                verticesAccess[(int)triangle1[1].x, (int)triangle1[1].z][1] = triangle1[1];
-
                 vertices.Add(triangle1[2]);
-                verticesAccess[(int)triangle1[2].x, (int)triangle1[2].z][2] = triangle1[2];
-
                 vertices.Add(triangle2[0]);
-                verticesAccess[(int)triangle2[0].x, (int)triangle2[0].z][3] = triangle2[0];
-
                 vertices.Add(triangle2[1]);
-                verticesAccess[(int)triangle2[1].x, (int)triangle2[1].z][4] = triangle2[1];
-
                 vertices.Add(triangle2[2]);
-                verticesAccess[(int)triangle2[2].x, (int)triangle2[2].z][5] = triangle2[2];
 
                 Triangle t1 = new Triangle();
                 t1.coords = new Vector2(j, i);
@@ -120,19 +106,25 @@ public class MeshGeneration : MonoBehaviour
                 t1.verticeIndexes = new int[3];
                 t2.verticeIndexes = new int[3];
 
-                triangles.Add(verticeCount++);
                 t1.verticeIndexes[0] = verticeCount;
+                verticesAccess[(int)triangle1[0].x, (int)triangle1[0].z].Add(verticeCount);
                 triangles.Add(verticeCount++);
                 t1.verticeIndexes[1] = verticeCount;
+                verticesAccess[(int)triangle1[1].x, (int)triangle1[1].z].Add(verticeCount);
                 triangles.Add(verticeCount++);
                 t1.verticeIndexes[2] = verticeCount;
+                verticesAccess[(int)triangle1[2].x, (int)triangle1[2].z].Add(verticeCount);
+                triangles.Add(verticeCount++);
 
-                triangles.Add(verticeCount++);
                 t2.verticeIndexes[0] = verticeCount;
+                verticesAccess[(int)triangle2[0].x, (int)triangle2[0].z].Add(verticeCount);
                 triangles.Add(verticeCount++);
                 t2.verticeIndexes[1] = verticeCount;
+                verticesAccess[(int)triangle2[1].x, (int)triangle2[1].z].Add(verticeCount);
                 triangles.Add(verticeCount++);
                 t2.verticeIndexes[1] = verticeCount;
+                verticesAccess[(int)triangle2[2].x, (int)triangle2[2].z].Add(verticeCount);
+                triangles.Add(verticeCount++);
 
                 triangleAccess[triangleCount++] = t1;
                 triangleAccess[triangleCount++] = t2;
