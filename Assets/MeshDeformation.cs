@@ -4,24 +4,23 @@ using UnityEngine;
 
 public class MeshDeformation : MonoBehaviour
 {
-    // Start is called before the first frame update
     void Start()
     {
-        
-    }
 
-    // Update is called once per frame
+    }
+    
     void Update()
     {
-        if (Input.GetButtonDown("0"))
+        if (Input.GetMouseButton(0))
         {
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
             RaycastHit hit;
             Physics.Raycast(ray, out hit);
 
-            if (hit.collider)
+            if (hit.collider && hit.collider.gameObject == gameObject)
             {
-                hit.collider.gameObject.GetComponent<TerraformableMesh>().Deform(hit);
+                Vector3 localPosition = transform.worldToLocalMatrix.MultiplyPoint(hit.point);
+                Debug.Log(localPosition);
             }
         }
     }
