@@ -6,6 +6,8 @@ using UnityEngine;
 public class MeshAnimation : MonoBehaviour
 {
 
+    public float r;
+
     Mesh m;
     Mesh c;
 

@@ -15,7 +15,7 @@ public class ImageProjection : MonoBehaviour
 
     void Start()
     {
-        MeshGeneration generator = gameObject.AddComponent<MeshGeneration>();
+        ProceduralMesh generator = gameObject.AddComponent<ProceduralMesh>();
         generator.width = width;
         generator.height = height;
 
