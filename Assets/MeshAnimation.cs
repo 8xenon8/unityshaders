@@ -64,8 +64,6 @@ public class MeshAnimation : MonoBehaviour
             //if (i % root != 0 && i % root != root - 1 && i <= vs.Length - root && i >= root)
             //{
 
-            float amp = .5f;
-
             counter = i / 6;
 
             // uncomment for 0.0...1.0 values
