@@ -59,10 +59,10 @@ public class Player : MonoBehaviour
             ball.AddForce(direction * speed * Time.deltaTime * -1, ForceMode.Force);
         }
 
-        ball.velocity = new Vector3(
-            ball.velocity.x * 0.95f,
-            ball.velocity.y,
-            ball.velocity.z * 0.95f
-        );
+        //ball.velocity = new Vector3(
+        //    ball.velocity.x * 0.95f,
+        //    ball.velocity.y,
+        //    ball.velocity.z * 0.95f
+        //);
     }
 }

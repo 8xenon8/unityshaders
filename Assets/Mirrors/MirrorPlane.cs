@@ -21,7 +21,7 @@ public class MirrorPlane : MonoBehaviour
     {
         source = transform.Find(cameraObjName).GetComponent<Camera>();
         plane = transform.Find(planeObjName).gameObject;
-        viewport = Camera.current;
+        viewport = Camera.main;
         mirrors.Add(this);
     }
 
