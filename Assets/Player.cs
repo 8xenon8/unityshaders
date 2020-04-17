@@ -19,50 +19,32 @@ public class Player : MonoBehaviour
     {
 
         Vector3 pos = transform.position;
-        Quaternion rotation = Camera.main.transform.rotation;
-
-        //Vector2 direction = new Vector2(transform.position Camera.main.transform);
-
+        Vector3 direction = Vector3.zero;
         float angle = Camera.main.transform.rotation.eulerAngles.y;
-
-        Vector3 direction;
 
         if (Input.GetKey("w"))
         {
-            direction = Camera.main.transform.forward;
-            direction.y = 0;
-            direction = direction.normalized;
-            ball.AddForce(direction * speed * Time.deltaTime, ForceMode.Force);
+            direction += Camera.main.transform.forward;
         }
 
         if (Input.GetKey("s"))
         {
-            direction = Camera.main.transform.forward;
-            direction.y = 0;
-            direction = direction.normalized;
-            ball.AddForce(direction * speed * Time.deltaTime * -1, ForceMode.Force);
+            direction += Camera.main.transform.forward * -1;
         }
 
         if (Input.GetKey("d"))
         {
-            direction = Camera.main.transform.right;
-            direction.y = 0;
-            direction = direction.normalized;
-            ball.AddForce(direction * speed * Time.deltaTime, ForceMode.Force);
+            direction += Camera.main.transform.right;
         }
 
         if (Input.GetKey("a"))
         {
-            direction = Camera.main.transform.right;
-            direction.y = 0;
-            direction = direction.normalized;
-            ball.AddForce(direction * speed * Time.deltaTime * -1, ForceMode.Force);
+            direction += Camera.main.transform.right * -1;
         }
 
-        //ball.velocity = new Vector3(
-        //    ball.velocity.x * 0.95f,
-        //    ball.velocity.y,
-        //    ball.velocity.z * 0.95f
-        //);
+        direction.y = 0;
+        direction.Normalize();
+
+        ball.AddForce(direction * speed * Time.deltaTime, ForceMode.Force);
     }
 }
