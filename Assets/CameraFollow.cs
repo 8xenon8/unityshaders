@@ -73,6 +73,18 @@ public class CameraFollow : MonoBehaviour
 
         transform.LookAt(player.transform.position);
 
+
+        int layermask = ~LayerMask.NameToLayer("Player");
+
+        RaycastHit hit;
+        Physics.Raycast(player.transform.position, transform.position - player.transform.position, out hit, Vector3.Distance(transform.position, player.transform.position), layermask);
+
+        if (hit.collider)
+        {
+            Debug.DrawLine(hit.point, player.transform.position, Color.red);
+            transform.position = hit.point;
+        }
+
         if (Input.GetMouseButton(1))
         {
             Camera.main.fieldOfView = 10;
