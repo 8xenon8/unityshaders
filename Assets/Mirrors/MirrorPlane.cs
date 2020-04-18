@@ -54,6 +54,19 @@ public class MirrorPlane : MonoBehaviour
         source.transform.position = planeObj.transform.localToWorldMatrix.MultiplyPoint(reflectionCameraPosition);
         source.transform.rotation = Quaternion.Euler(viewportRotation);
 
+        //if (viewport.gameObject.GetComponent<CameraFollow>().flipHorizontal)
+        //{
+        //    //Quaternion tmpRot = viewport.transform.rotation;
+        //    //Vector3 tmpPos = viewport.transform.position;
+
+        //    //viewport.transform.rotation = source.transform.rotation;
+        //    //viewport.transform.position = source.transform.position;
+
+        //    //source.transform.rotation = tmpRot;
+        //    //source.transform.position = tmpPos;
+        //    viewport
+        //}
+
         source.Render();
 
 
@@ -91,6 +104,7 @@ public class MirrorPlane : MonoBehaviour
     {
         Camera.main.gameObject.GetComponent<CameraFollow>().flipHorizontal = !Camera.main.gameObject.GetComponent<CameraFollow>().flipHorizontal;
         rb.velocity *= -1;
+        Camera.main.gameObject.GetComponent<CameraFollow>().FlipCamera();
     }
 
     private void OnDestroy()

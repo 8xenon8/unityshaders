@@ -22,6 +22,8 @@ public class Player : MonoBehaviour
         Vector3 direction = Vector3.zero;
         float angle = Camera.main.transform.rotation.eulerAngles.y;
 
+        int doFlip = Camera.main.gameObject.GetComponent<CameraFollow>().flipHorizontal ? -1 : 1;
+
         if (Input.GetKey("w"))
         {
             direction += Camera.main.transform.forward;
@@ -34,12 +36,12 @@ public class Player : MonoBehaviour
 
         if (Input.GetKey("d"))
         {
-            direction += Camera.main.transform.right;
+            direction += Camera.main.transform.right * doFlip;
         }
 
         if (Input.GetKey("a"))
         {
-            direction += Camera.main.transform.right * -1;
+            direction += Camera.main.transform.right * -1 * doFlip;
         }
 
         direction.y = 0;
