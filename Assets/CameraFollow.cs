@@ -40,7 +40,7 @@ public class CameraFollow : MonoBehaviour
 
         zoom = Mathf.Min(Mathf.Max(zoom, zoomMin), zoomMax);
 
-        float offsetX = Input.GetAxis("Mouse X");
+        float offsetX = Input.GetAxis("Mouse X") * (flipHorizontal ? -1f : 1f);
         float offsetY = Input.GetAxis("Mouse Y");
 
         angleX += offsetX * mouseSpeedX;
@@ -83,7 +83,6 @@ public class CameraFollow : MonoBehaviour
 
         if (hit.collider)
         {
-            Debug.DrawLine(hit.point, player.transform.position, Color.red);
             transform.position = hit.point;
         }
 
@@ -96,6 +95,11 @@ public class CameraFollow : MonoBehaviour
         }
     }
 
+    public void FlipCamera()
+    {
+        angleX += 180;
+    }
+
     void OnPreCull()
     {
         Camera camera = gameObject.GetComponent<Camera>();
@@ -103,7 +107,18 @@ public class CameraFollow : MonoBehaviour
         camera.ResetProjectionMatrix();
         Vector3 scale = new Vector3(flipHorizontal ? -1 : 1, 1, 1);
         camera.projectionMatrix = camera.projectionMatrix * Matrix4x4.Scale(scale);
+
+        //foreach (Camera cam in Camera.allCameras)
+        //{
+        //    if (cam.gameObject != gameObject)
+        //    {
+        //        cam.ResetWorldToCameraMatrix();
+        //        cam.ResetProjectionMatrix();
+        //        cam.projectionMatrix = cam.projectionMatrix * Matrix4x4.Scale(scale);
+        //    }
+        //}
     }
+
     void OnPreRender()
     {
         GL.invertCulling = flipHorizontal;
