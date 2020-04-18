@@ -21,6 +21,8 @@ public class CameraFollow : MonoBehaviour
 
     public bool disabled = false;
 
+    public bool flipHorizontal = false;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -80,5 +82,23 @@ public class CameraFollow : MonoBehaviour
         {
             Camera.main.fieldOfView = 60;
         }
+    }
+
+    void OnPreCull()
+    {
+        Camera camera = gameObject.GetComponent<Camera>();
+        camera.ResetWorldToCameraMatrix();
+        camera.ResetProjectionMatrix();
+        Vector3 scale = new Vector3(flipHorizontal ? -1 : 1, 1, 1);
+        camera.projectionMatrix = camera.projectionMatrix * Matrix4x4.Scale(scale);
+    }
+    void OnPreRender()
+    {
+        GL.invertCulling = flipHorizontal;
+    }
+
+    void OnPostRender()
+    {
+        GL.invertCulling = false;
     }
 }
