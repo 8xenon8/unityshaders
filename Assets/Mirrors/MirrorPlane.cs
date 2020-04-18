@@ -3,24 +3,35 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
-[ExecuteInEditMode]
 public class MirrorPlane : MonoBehaviour
 {
-    GameObject plane;
+    GameObject planeObj;
+    Plane plane;
     Camera source;
     Camera viewport;
 
-    RenderTexture viewTexture;
+    private bool canSwap = true;
 
-    private const string cameraObjName = "MirrorCamera";
-    private const string planeObjName = "MirrorPlane";
+    RenderTexture viewTexture;
+    
 
     public static List<MirrorPlane> mirrors = new List<MirrorPlane>();
 
-    void Start()
+    void Awake()
     {
-        source = transform.Find(cameraObjName).GetComponent<Camera>();
-        plane = transform.Find(planeObjName).gameObject;
+        GameObject cameraObj = new GameObject("camera_" + gameObject.GetHashCode().ToString());
+        cameraObj.hideFlags = HideFlags.DontSave;
+        source = cameraObj.AddComponent<Camera>();
+
+        planeObj = transform.gameObject;
+
+        Mesh m = GetComponent<MeshFilter>().mesh;
+        plane = new Plane(
+            m.vertices[0],
+            m.vertices[1],
+            m.vertices[2]
+        );
+
         viewport = Camera.main;
         mirrors.Add(this);
     }
@@ -28,13 +39,10 @@ public class MirrorPlane : MonoBehaviour
     public void Render()
     {
         viewTexture = new RenderTexture(Screen.width, Screen.height, 0);
-        // Render the view from the portal camera to the view texture
         source.targetTexture = viewTexture;
-        // Display the view texture on the screen of the linked portal
-        //plane.GetComponent<MeshRenderer>().material.SetTextureScale("_MainTex", new Vector2(-1, 1));
-        plane.GetComponent<MeshRenderer>().material.SetTexture("_MainTex", viewTexture);
+        planeObj.GetComponent<MeshRenderer>().material.SetTexture("_MainTex", viewTexture);
 
-        Vector3 viewportRelativePosition = plane.transform.worldToLocalMatrix.MultiplyPoint(viewport.transform.position);
+        Vector3 viewportRelativePosition = planeObj.transform.worldToLocalMatrix.MultiplyPoint(viewport.transform.position);
         Vector3 viewportRotation = viewport.transform.rotation.eulerAngles;
         viewportRotation.y = 180 - viewportRotation.y;
         Vector3 reflectionCameraPosition = new Vector3(
@@ -42,7 +50,8 @@ public class MirrorPlane : MonoBehaviour
             viewportRelativePosition.y * -1,
             viewportRelativePosition.z
         );
-        source.transform.position = plane.transform.localToWorldMatrix.MultiplyPoint(reflectionCameraPosition);
+
+        source.transform.position = planeObj.transform.localToWorldMatrix.MultiplyPoint(reflectionCameraPosition);
         source.transform.rotation = Quaternion.Euler(viewportRotation);
 
         source.Render();
@@ -52,5 +61,41 @@ public class MirrorPlane : MonoBehaviour
 
         //RenderTexture texture = source.targetTexture;
         //texture.
+    }
+
+    private void OnTriggerStay(Collider other)
+    {
+        Vector3 p = gameObject.GetComponent<Collider>().ClosestPoint(other.gameObject.transform.position);
+
+        Vector3 diff = other.gameObject.transform.position - p;
+
+        Rigidbody otherRb = other.gameObject.GetComponent<Rigidbody>();
+
+        //other.gameObject.GetComponent<Rigidbody>().AddForce(diff * (1 - diff.magnitude) * 300, ForceMode.Force);
+        //otherRb.velocity *= diff.magnitude;
+        //otherRb.AddForce(diff * (1 - diff.magnitude) * 10, ForceMode.Force);
+
+        if (canSwap && diff.magnitude < 1f)
+        {
+            Swap(otherRb);
+            canSwap = false;
+        }
+    }
+
+    private void OnTriggerExit(Collider other)
+    {
+        canSwap = true;
+    }
+
+    private void Swap(Rigidbody rb)
+    {
+        Camera.main.gameObject.GetComponent<CameraFollow>().flipHorizontal = !Camera.main.gameObject.GetComponent<CameraFollow>().flipHorizontal;
+        rb.velocity *= -1;
+    }
+
+    private void OnDestroy()
+    {
+        Destroy(source.gameObject);
+        mirrors.Remove(this);
     }
 }
