@@ -13,7 +13,8 @@ public class MirrorPlane : MonoBehaviour
     private bool canSwap = true;
 
     RenderTexture viewTexture;
-    
+
+    public bool isDisabled;
 
     public static List<MirrorPlane> mirrors = new List<MirrorPlane>();
 
@@ -44,42 +45,41 @@ public class MirrorPlane : MonoBehaviour
         planeObj.GetComponent<MeshRenderer>().material.SetTexture("_MainTex", viewTexture);
 
         Vector3 viewportRelativePosition = planeObj.transform.worldToLocalMatrix.MultiplyPoint(viewport.transform.position);
-        Vector3 viewportRotation = viewport.transform.rotation.eulerAngles;
-        viewportRotation.y = 180 - viewportRotation.y;
         Vector3 reflectionCameraPosition = new Vector3(
             viewportRelativePosition.x,
             viewportRelativePosition.y * -1,
             viewportRelativePosition.z
         );
 
-        source.ResetWorldToCameraMatrix();
-        source.ResetProjectionMatrix();
-        Vector3 scale = new Vector3(-1, 1, 1);
-        source.projectionMatrix = source.projectionMatrix * Matrix4x4.Scale(scale);
-
         source.transform.position = planeObj.transform.localToWorldMatrix.MultiplyPoint(reflectionCameraPosition);
-        source.transform.rotation = Quaternion.Euler(viewportRotation);
 
-        //if (viewport.gameObject.GetComponent<CameraFollow>().flipHorizontal)
-        //{
-        //    //Quaternion tmpRot = viewport.transform.rotation;
-        //    //Vector3 tmpPos = viewport.transform.position;
+        Vector3 mirrorsNormal = planeObj.transform.localRotation * new Vector3(0f, 1, 0f);
+        Plane planeOfMirror = new Plane(mirrorsNormal, planeObj.transform.position);
 
-        //    //viewport.transform.rotation = source.transform.rotation;
-        //    //viewport.transform.position = source.transform.position;
+        float intersectionDistance;
 
-        //    //source.transform.rotation = tmpRot;
-        //    //source.transform.position = tmpPos;
-        //    viewport
-        //}
+        Ray rayToMirror = new Ray(viewport.transform.position, viewport.transform.forward);
+        if (planeOfMirror.Raycast(rayToMirror, out intersectionDistance))
+        {
+            Vector3 hitPoint = rayToMirror.GetPoint(intersectionDistance);
+            source.transform.LookAt(hitPoint);
+        } else {
+            rayToMirror = new Ray(viewport.transform.position, viewport.transform.forward * -1);
+            planeOfMirror.Raycast(rayToMirror, out intersectionDistance);
+            Vector3 hitPoint = rayToMirror.GetPoint(intersectionDistance);
+
+            Debug.DrawLine(hitPoint - Vector3.left, hitPoint + Vector3.left);
+            Debug.DrawLine(hitPoint - Vector3.forward, hitPoint + Vector3.forward);
+
+            source.transform.LookAt(hitPoint);
+            Vector3 dir = source.transform.position - hitPoint;
+            Debug.DrawLine(hitPoint, hitPoint + dir * 10, Color.green);
+            source.transform.LookAt(source.transform.position + dir);
+            //source.transform.rotation *= Quaternion.Euler(0, -1, 0);
+            //source.transform.rotation = Quaternion. (source.transform.rotation);
+        }
 
         source.Render();
-
-
-        // start render
-
-        //RenderTexture texture = source.targetTexture;
-        //texture.
     }
 
     private void OnTriggerStay(Collider other)
