@@ -21,6 +21,7 @@ public class MirrorPlane : MonoBehaviour
     {
         GameObject cameraObj = new GameObject("camera_" + gameObject.GetHashCode().ToString());
         cameraObj.hideFlags = HideFlags.DontSave;
+        cameraObj.AddComponent<ReflectionCamera>();
         source = cameraObj.AddComponent<Camera>();
 
         planeObj = transform.gameObject;
@@ -50,6 +51,11 @@ public class MirrorPlane : MonoBehaviour
             viewportRelativePosition.y * -1,
             viewportRelativePosition.z
         );
+
+        source.ResetWorldToCameraMatrix();
+        source.ResetProjectionMatrix();
+        Vector3 scale = new Vector3(-1, 1, 1);
+        source.projectionMatrix = source.projectionMatrix * Matrix4x4.Scale(scale);
 
         source.transform.position = planeObj.transform.localToWorldMatrix.MultiplyPoint(reflectionCameraPosition);
         source.transform.rotation = Quaternion.Euler(viewportRotation);
@@ -102,8 +108,8 @@ public class MirrorPlane : MonoBehaviour
 
     private void Swap(Rigidbody rb)
     {
-        Camera.main.gameObject.GetComponent<CameraFollow>().flipHorizontal = !Camera.main.gameObject.GetComponent<CameraFollow>().flipHorizontal;
         rb.velocity *= -1;
+        Game.Current().MirrorSwap();
         Camera.main.gameObject.GetComponent<CameraFollow>().FlipCamera();
     }
 

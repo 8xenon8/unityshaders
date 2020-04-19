@@ -22,7 +22,7 @@ public class Player : MonoBehaviour
         Vector3 direction = Vector3.zero;
         float angle = Camera.main.transform.rotation.eulerAngles.y;
 
-        int doFlip = Camera.main.gameObject.GetComponent<CameraFollow>().flipHorizontal ? -1 : 1;
+        int doFlip = Game.Current().isFlipped ? -1 : 1;
 
         if (Input.GetKey("w"))
         {

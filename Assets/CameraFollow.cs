@@ -21,15 +21,17 @@ public class CameraFollow : MonoBehaviour
 
     public bool disabled = false;
 
-    public bool flipHorizontal = false;
+    public Matrix4x4 m;
 
     // Start is called before the first frame update
     void Start()
     {
         player = GameObject.Find("Player").GetComponent<Player>();
+        m = gameObject.GetComponent<Camera>().projectionMatrix;
     }
     void Update()
     {
+        gameObject.GetComponent<Camera>().projectionMatrix = m;
 
         if (disabled)
         {
@@ -40,14 +42,14 @@ public class CameraFollow : MonoBehaviour
 
         zoom = Mathf.Min(Mathf.Max(zoom, zoomMin), zoomMax);
 
-        float offsetX = Input.GetAxis("Mouse X") * (flipHorizontal ? -1f : 1f);
+        float offsetX = Input.GetAxis("Mouse X") * (Game.Current().isFlipped ? -1f : 1f);
         float offsetY = Input.GetAxis("Mouse Y");
 
         angleX += offsetX * mouseSpeedX;
 
         if (angleX < 0)
         {
-            angleX = 360f - angleX;
+            angleX = 360f + angleX;
         }
 
         if (angleX >= 360)
@@ -105,23 +107,13 @@ public class CameraFollow : MonoBehaviour
         Camera camera = gameObject.GetComponent<Camera>();
         camera.ResetWorldToCameraMatrix();
         camera.ResetProjectionMatrix();
-        Vector3 scale = new Vector3(flipHorizontal ? -1 : 1, 1, 1);
+        Vector3 scale = new Vector3(Game.Current().isFlipped ? -1 : 1, 1, 1);
         camera.projectionMatrix = camera.projectionMatrix * Matrix4x4.Scale(scale);
-
-        //foreach (Camera cam in Camera.allCameras)
-        //{
-        //    if (cam.gameObject != gameObject)
-        //    {
-        //        cam.ResetWorldToCameraMatrix();
-        //        cam.ResetProjectionMatrix();
-        //        cam.projectionMatrix = cam.projectionMatrix * Matrix4x4.Scale(scale);
-        //    }
-        //}
     }
 
     void OnPreRender()
     {
-        GL.invertCulling = flipHorizontal;
+        GL.invertCulling = Game.Current().isFlipped;
     }
 
     void OnPostRender()
