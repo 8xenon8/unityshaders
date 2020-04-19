@@ -1,6 +1,4 @@
-﻿// Upgrade NOTE: replaced 'mul(UNITY_MATRIX_MVP,*)' with 'UnityObjectToClipPos(*)'
-
-Shader "FX/MirrorReflection"
+﻿Shader "Custom/Mirror"
 {
 	Properties
 	{
@@ -30,6 +28,8 @@ Shader "FX/MirrorReflection"
 				o.pos = UnityObjectToClipPos(pos);
 				o.uv = TRANSFORM_TEX(uv, _MainTex);
 				o.refl = ComputeScreenPos(o.pos);
+				o.uv.xy = o.refl.xy / o.refl.w;
+				o.uv.x = 1 - o.uv.x;
 				return o;
 			}
 			sampler2D _MainTex;
