@@ -16,6 +16,8 @@ public class MirrorPlane : MonoBehaviour
 
     public bool isDisabled;
 
+    public LayerMask layersToSwitch;
+
     public static List<MirrorPlane> mirrors = new List<MirrorPlane>();
 
     void Awake()
@@ -24,6 +26,7 @@ public class MirrorPlane : MonoBehaviour
         cameraObj.hideFlags = HideFlags.DontSave;
         cameraObj.AddComponent<ReflectionCamera>();
         source = cameraObj.AddComponent<Camera>();
+        source.cullingMask ^= layersToSwitch;
 
         planeObj = transform.gameObject;
 
@@ -88,6 +91,23 @@ public class MirrorPlane : MonoBehaviour
         rb.velocity = Vector3.Reflect(rb.velocity.normalized, plane.normal) * rb.velocity.magnitude;
         Game.Current().MirrorSwap();
         Camera.main.gameObject.GetComponent<CameraFollow>().FlipCamera();
+        Camera.main.cullingMask ^= layersToSwitch;
+        source.cullingMask ^= layersToSwitch;
+
+        for (int i = 0; i < 32; i++)
+        {
+            bool doCollide;
+
+            int layerMask = (int)Mathf.Pow(2, i);
+            int playerLayer = LayerMask.NameToLayer("Player");
+
+            if ((layersToSwitch & layerMask) == layerMask)
+            {
+                doCollide = Physics.GetIgnoreLayerCollision(i, playerLayer);
+                Physics.IgnoreLayerCollision(i, playerLayer, !doCollide);
+            }
+
+        }
     }
 
     private void OnDestroy()

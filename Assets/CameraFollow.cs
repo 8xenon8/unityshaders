@@ -81,7 +81,7 @@ public class CameraFollow : MonoBehaviour
         int layermask = ~LayerMask.NameToLayer("Player");
 
         RaycastHit hit;
-        Physics.Raycast(player.transform.position, transform.position - player.transform.position, out hit, Vector3.Distance(transform.position, player.transform.position), layermask);
+        Physics.Raycast(player.transform.position, transform.position - player.transform.position, out hit, Vector3.Distance(transform.position, player.transform.position), Camera.main.cullingMask);
 
         if (hit.collider)
         {
