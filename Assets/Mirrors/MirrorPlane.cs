@@ -49,7 +49,7 @@ public class MirrorPlane : MonoBehaviour
             newCamObj.hideFlags = HideFlags.DontSave;
             newCamObj.name = "Camera_" + gameObject.name + "_" + newCamObj.GetHashCode().ToString();
             Camera newCam = newCamObj.AddComponent<Camera>();
-            newCam.cullingMask ^= layersToSwitch;
+            newCam.cullingMask = cam.gameObject.GetComponent<Camera>().cullingMask ^ layersToSwitch;
             ReflectionCamera newRCam = newCamObj.AddComponent<ReflectionCamera>();
 
             newCam.projectionMatrix = cam.gameObject.GetComponent<Camera>().projectionMatrix;
@@ -72,11 +72,13 @@ public class MirrorPlane : MonoBehaviour
     {
         MainCamera rCam;
 
+        if (Camera.current.gameObject.name == "Scene Camera") { return; }
+
         if (!plane.GetSide(Camera.current.transform.position)) { return; }
 
         if (Camera.current.TryGetComponent(out rCam))
         {
-            if (rCam.depth >= 10) { return; }
+            if (rCam.depth >= 5) { return; }
 
             ReflectionCamera newrCam = GetCam(rCam);
         }
@@ -96,7 +98,6 @@ public class MirrorPlane : MonoBehaviour
         if (canSwap && plane.GetSide(other.gameObject.transform.position) == false)
         {
             Swap(other.gameObject.GetComponent<Rigidbody>());
-            canSwap = false;
         }
     }
 
@@ -108,7 +109,7 @@ public class MirrorPlane : MonoBehaviour
     private void Swap(Rigidbody rb)
     {
         rb.velocity = Vector3.Reflect(rb.velocity.normalized, plane.normal) * rb.velocity.magnitude;
-        Game.Current().MirrorSwap();
+        Game.Current().MirrorSwap(layersToSwitch);
         Camera.main.gameObject.GetComponent<CameraFollow>().FlipCamera();
         Camera.main.cullingMask ^= layersToSwitch;
 
@@ -117,22 +118,13 @@ public class MirrorPlane : MonoBehaviour
             keyvalue.Value.gameObject.GetComponent<Camera>().cullingMask ^= layersToSwitch;
         }
 
-        //source.cullingMask ^= layersToSwitch;
+        canSwap = false;
 
-        for (int i = 0; i < 32; i++)
+        foreach (KeyValuePair<string, ReflectionCamera> cam in attachedCameras)
         {
-            bool doCollide;
-
-            int layerMask = (int)Mathf.Pow(2, i);
-            int playerLayer = LayerMask.NameToLayer("Player");
-
-            if ((layersToSwitch & layerMask) == layerMask)
-            {
-                doCollide = Physics.GetIgnoreLayerCollision(i, playerLayer);
-                Physics.IgnoreLayerCollision(i, playerLayer, !doCollide);
-            }
-
+            Destroy(cam.Value.gameObject);
         }
+        attachedCameras.Clear();
     }
 
     private void OnDestroy()

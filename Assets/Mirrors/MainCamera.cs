@@ -38,4 +38,14 @@ public class MainCamera : MonoBehaviour
     {
         GL.invertCulling = false;
     }
+
+    void ClearCameras()
+    {
+        foreach (Camera cam in camerasToRender)
+        {
+            cam.gameObject.GetComponent<ReflectionCamera>().ClearCameras();
+            Destroy(cam.gameObject);
+        }
+        camerasToRender.Clear();
+    }
 }
