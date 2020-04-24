@@ -30,6 +30,11 @@ public class Game : MonoBehaviour
     public void MirrorSwap()
     {
         isFlipped = !isFlipped;
-        GL.invertCulling = isFlipped;
+
+        foreach (Camera cam in Camera.allCameras)
+        {
+            cam.projectionMatrix *= Matrix4x4.Scale(new Vector3(-1, 1, 1));
+        }
+
     }
 }
