@@ -9,7 +9,7 @@ public class CameraMirror : MonoBehaviour
     {
         foreach (MirrorPlane mirror in MirrorPlane.mirrors)
         {
-            mirror.Render();
+            //mirror.Render();
         }
     }
 }

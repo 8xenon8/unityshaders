@@ -5,10 +5,10 @@ using UnityEngine;
 
 public class MirrorPlane : MonoBehaviour
 {
-    GameObject planeObj;
-    Plane plane;
     Camera source;
     Camera viewport;
+
+    public Plane plane;
 
     private bool canSwap = true;
 
@@ -16,88 +16,92 @@ public class MirrorPlane : MonoBehaviour
 
     public bool isDisabled;
 
+    public LayerMask layersToSwitch;
+
     public static List<MirrorPlane> mirrors = new List<MirrorPlane>();
 
-    void Awake()
+    public Dictionary<string, ReflectionCamera> attachedCameras;
+
+    void Start()
     {
-        GameObject cameraObj = new GameObject("camera_" + gameObject.GetHashCode().ToString());
-        cameraObj.hideFlags = HideFlags.DontSave;
-        cameraObj.AddComponent<ReflectionCamera>();
-        source = cameraObj.AddComponent<Camera>();
+        attachedCameras = new Dictionary<string, ReflectionCamera>();
+        viewTexture = new RenderTexture(Screen.width, Screen.height, 0);
+        gameObject.GetComponent<Renderer>().material.SetTexture("_MainTex", viewTexture);
 
-        planeObj = transform.gameObject;
-
-        Mesh m = GetComponent<MeshFilter>().mesh;
-        plane = new Plane(
-            m.vertices[0],
-            m.vertices[1],
-            m.vertices[2]
-        );
-
-        viewport = Camera.main;
-        mirrors.Add(this);
+        Vector3 mirrorsNormal = gameObject.transform.localRotation * new Vector3(0f, 1, 0f);
+        plane = new Plane(mirrorsNormal, gameObject.transform.position);
     }
 
-    public void Render()
+    public void Update()
     {
-        viewTexture = new RenderTexture(Screen.width, Screen.height, 0);
-        source.targetTexture = viewTexture;
-        planeObj.GetComponent<MeshRenderer>().material.SetTexture("_MainTex", viewTexture);
 
-        Vector3 viewportRelativePosition = planeObj.transform.worldToLocalMatrix.MultiplyPoint(viewport.transform.position);
-        Vector3 reflectionCameraPosition = new Vector3(
-            viewportRelativePosition.x,
-            viewportRelativePosition.y * -1,
-            viewportRelativePosition.z
-        );
+    }
 
-        source.transform.position = planeObj.transform.localToWorldMatrix.MultiplyPoint(reflectionCameraPosition);
-
-        Vector3 mirrorsNormal = planeObj.transform.localRotation * new Vector3(0f, 1, 0f);
-        Plane planeOfMirror = new Plane(mirrorsNormal, planeObj.transform.position);
-
-        float intersectionDistance;
-
-        Ray rayToMirror = new Ray(viewport.transform.position, viewport.transform.forward);
-        if (planeOfMirror.Raycast(rayToMirror, out intersectionDistance))
+    ReflectionCamera GetCam(MainCamera cam)
+    {
+        if (attachedCameras.ContainsKey(cam.gameObject.name))
         {
-            Vector3 hitPoint = rayToMirror.GetPoint(intersectionDistance);
-            source.transform.LookAt(hitPoint);
-        } else {
-            rayToMirror = new Ray(viewport.transform.position, viewport.transform.forward * -1);
-            planeOfMirror.Raycast(rayToMirror, out intersectionDistance);
-            Vector3 hitPoint = rayToMirror.GetPoint(intersectionDistance);
+            return attachedCameras[cam.gameObject.name];
+        } else
+        {
+            GameObject newCamObj = new GameObject();
+            newCamObj.SetActive(false);
+            newCamObj.hideFlags = HideFlags.DontSave;
+            newCamObj.name = "Camera_" + gameObject.name + "_" + newCamObj.GetHashCode().ToString();
+            Camera newCam = newCamObj.AddComponent<Camera>();
+            newCam.cullingMask = cam.gameObject.GetComponent<Camera>().cullingMask ^ layersToSwitch;
+            ReflectionCamera newRCam = newCamObj.AddComponent<ReflectionCamera>();
 
-            Debug.DrawLine(hitPoint - Vector3.left, hitPoint + Vector3.left);
-            Debug.DrawLine(hitPoint - Vector3.forward, hitPoint + Vector3.forward);
+            newCam.projectionMatrix = cam.gameObject.GetComponent<Camera>().projectionMatrix;
+            newCam.targetTexture = viewTexture;
 
-            source.transform.LookAt(hitPoint);
-            Vector3 dir = source.transform.position - hitPoint;
-            Debug.DrawLine(hitPoint, hitPoint + dir * 10, Color.green);
-            source.transform.LookAt(source.transform.position + dir);
-            //source.transform.rotation *= Quaternion.Euler(0, -1, 0);
-            //source.transform.rotation = Quaternion. (source.transform.rotation);
+            newRCam.depth = cam.depth + 1;
+            newRCam.mirror = this;
+            newRCam.originCamera = cam;
+            cam.camerasToRender.Add(newCam);
+            attachedCameras[Camera.current.gameObject.name] = newRCam;
+
+            newRCam.SetPositionAndRotationByOriginCameraRecursively(cam.transform);
+            newCamObj.SetActive(true);
+
+            return newRCam;
         }
+    }
 
-        source.Render();
+    private void OnWillRenderObject()
+    {
+        MainCamera rCam;
+
+        if (Camera.current.gameObject.name == "Scene Camera") { return; }
+
+        if (!plane.GetSide(Camera.current.transform.position)) { return; }
+
+        if (Camera.current.TryGetComponent(out rCam))
+        {
+            if (rCam.depth >= 5) { return; }
+
+            ReflectionCamera newrCam = GetCam(rCam);
+        }
+    }
+
+    private void OnBecameInvisible()
+    {
+        foreach (KeyValuePair<string, ReflectionCamera> cam in attachedCameras)
+        {
+            Destroy(cam.Value.gameObject);
+        }
+        attachedCameras.Clear();
     }
 
     private void OnTriggerStay(Collider other)
     {
-        Vector3 p = gameObject.GetComponent<Collider>().ClosestPoint(other.gameObject.transform.position);
-
-        Vector3 diff = other.gameObject.transform.position - p;
-
-        Rigidbody otherRb = other.gameObject.GetComponent<Rigidbody>();
-
-        //other.gameObject.GetComponent<Rigidbody>().AddForce(diff * (1 - diff.magnitude) * 300, ForceMode.Force);
-        //otherRb.velocity *= diff.magnitude;
-        //otherRb.AddForce(diff * (1 - diff.magnitude) * 10, ForceMode.Force);
-
-        if (canSwap && diff.magnitude < 1f)
+        if (canSwap && plane.GetSide(other.gameObject.transform.position) == false)
         {
-            Swap(otherRb);
+            Swap(other.gameObject.GetComponent<Rigidbody>());
             canSwap = false;
+        } else
+        {
+            canSwap = true;
         }
     }
 
@@ -108,14 +112,20 @@ public class MirrorPlane : MonoBehaviour
 
     private void Swap(Rigidbody rb)
     {
-        rb.velocity *= -1;
-        Game.Current().MirrorSwap();
-        Camera.main.gameObject.GetComponent<CameraFollow>().FlipCamera();
+        rb.velocity = Vector3.Reflect(rb.velocity.normalized, plane.normal) * rb.velocity.magnitude;
+        Game.Current().MirrorSwap(layersToSwitch);
+        Camera.main.gameObject.GetComponent<CameraFollow>().FlipCamera(attachedCameras[Camera.main.gameObject.name]);
+        Camera.main.cullingMask ^= layersToSwitch;
+
+        foreach (KeyValuePair<string, ReflectionCamera> keyvalue in attachedCameras)
+        {
+            keyvalue.Value.gameObject.GetComponent<Camera>().cullingMask ^= layersToSwitch;
+        }
     }
 
     private void OnDestroy()
     {
-        Destroy(source.gameObject);
+        //Destroy(source.gameObject);
         mirrors.Remove(this);
     }
 }

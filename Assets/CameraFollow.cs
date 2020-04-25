@@ -42,7 +42,7 @@ public class CameraFollow : MonoBehaviour
 
         zoom = Mathf.Min(Mathf.Max(zoom, zoomMin), zoomMax);
 
-        float offsetX = Input.GetAxis("Mouse X") * (Game.Current().isFlipped ? -1f : 1f);
+        float offsetX = Input.GetAxis("Mouse X");
         float offsetY = Input.GetAxis("Mouse Y");
 
         angleX += offsetX * mouseSpeedX;
@@ -60,46 +60,46 @@ public class CameraFollow : MonoBehaviour
         angleY += offsetY * mouseSpeedY;
         angleY = Mathf.Min(Mathf.Max(angleY, angleYMin), angleYMax);
 
-        float angleXRad = angleX * Mathf.Deg2Rad;
-
-        transform.position = player.transform.position;
-
-        transform.position += new Vector3(
-            Mathf.Sin(angleXRad),
-            0,
-            Mathf.Cos(angleXRad)
-        ) * zoom;
-
-        float d = Vector3.Distance(transform.position, player.transform.position);
-
-        transform.position = Vector3.MoveTowards(transform.position, player.transform.position, d - Mathf.Sqrt(1 - angleY * angleY) * zoom);
-        transform.position += Vector3.up * angleY * zoom * -1;
-
+        SetCameraPosition();
         transform.LookAt(player.transform.position);
-
-
-        int layermask = ~LayerMask.NameToLayer("Player");
-
-        RaycastHit hit;
-        Physics.Raycast(player.transform.position, transform.position - player.transform.position, out hit, Vector3.Distance(transform.position, player.transform.position), layermask);
-
-        if (hit.collider)
-        {
-            transform.position = hit.point;
-        }
 
         if (Input.GetMouseButton(1))
         {
             Camera.main.fieldOfView = 10;
-        } else
+        }
+        else
         {
             Camera.main.fieldOfView = 60;
         }
     }
 
-    public void FlipCamera()
+    private void SetCameraPosition()
     {
-        angleX += 180;
+        float angleXRad = angleX * Mathf.Deg2Rad;
+        float x = Game.Current().isFlipped ? Mathf.Cos(angleXRad) : Mathf.Sin(angleXRad);
+        float z = Game.Current().isFlipped ? Mathf.Sin(angleXRad) : Mathf.Cos(angleXRad);
+
+        Vector3 vec = new Vector3(x, angleY, z);
+        vec.Normalize();
+
+        RaycastHit hit;
+        Physics.Raycast(player.transform.position, vec, out hit, zoom, Camera.main.cullingMask);
+
+        if (hit.collider)
+        {
+            transform.position = hit.point;
+        }
+        else
+        {
+            transform.position = player.transform.position + vec * zoom;
+        }
+    }
+
+    public void FlipCamera(ReflectionCamera reflectionCamera)
+    {
+        int i = Game.Current().isFlipped ? 1 : -1;
+        Vector3 cameraToPlayer = reflectionCamera.transform.position - player.transform.position;
+        angleX = (Game.Current().isFlipped ? Mathf.Atan2(cameraToPlayer.z, cameraToPlayer.x) : Mathf.Atan2(cameraToPlayer.x, cameraToPlayer.z)) * Mathf.Rad2Deg;
     }
 
     void OnPreCull()
