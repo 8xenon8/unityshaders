@@ -8,18 +8,12 @@ public class CullingController
     {
         for (int i = 0; i < 32; i++)
         {
-            bool doCollide;
-
             int layerMask = (int)Mathf.Pow(2, i);
             int playerLayer = LayerMask.NameToLayer("Player");
-            
-            Physics.IgnoreLayerCollision(i, playerLayer, !((Game.Current().visibleLayers & layerMask) == layerMask));
 
+            bool doCollide = ((Game.Current().visibleLayers & layerMask) == layerMask);
+
+            Physics.IgnoreLayerCollision(i, playerLayer, !doCollide);
         }
-
-        //foreach (Camera cam in Camera.allCameras)
-        //{
-        //    cam.cullingMask = Game.Current().visibleLayers;
-        //}
     }
 }

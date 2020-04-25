@@ -98,6 +98,10 @@ public class MirrorPlane : MonoBehaviour
         if (canSwap && plane.GetSide(other.gameObject.transform.position) == false)
         {
             Swap(other.gameObject.GetComponent<Rigidbody>());
+            canSwap = false;
+        } else
+        {
+            canSwap = true;
         }
     }
 
@@ -110,21 +114,13 @@ public class MirrorPlane : MonoBehaviour
     {
         rb.velocity = Vector3.Reflect(rb.velocity.normalized, plane.normal) * rb.velocity.magnitude;
         Game.Current().MirrorSwap(layersToSwitch);
-        Camera.main.gameObject.GetComponent<CameraFollow>().FlipCamera();
+        Camera.main.gameObject.GetComponent<CameraFollow>().FlipCamera(attachedCameras[Camera.main.gameObject.name]);
         Camera.main.cullingMask ^= layersToSwitch;
 
         foreach (KeyValuePair<string, ReflectionCamera> keyvalue in attachedCameras)
         {
             keyvalue.Value.gameObject.GetComponent<Camera>().cullingMask ^= layersToSwitch;
         }
-
-        canSwap = false;
-
-        foreach (KeyValuePair<string, ReflectionCamera> cam in attachedCameras)
-        {
-            Destroy(cam.Value.gameObject);
-        }
-        attachedCameras.Clear();
     }
 
     private void OnDestroy()
