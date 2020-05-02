@@ -75,20 +75,24 @@ public class MirrorPlane : MonoBehaviour
         Vector3 camSpacePos = source.worldToCameraMatrix.MultiplyPoint(clipPlane.position);
         Vector3 camSpaceNormal = source.worldToCameraMatrix.MultiplyVector(plane.normal);
         float camSpaceDst = -Vector3.Dot(camSpacePos, camSpaceNormal) + 0.05f;
+        //if (!Game.Current().mirrorTransitionController.playerBehindMirror)
+        //{
+        //    camSpaceDst *= -1;
+        //}
 
         // Don't use oblique clip plane if very close to portal as it seems this can cause some visual artifacts
-        if (Mathf.Abs(camSpaceDst) > 0.2f)
-        {
-            Vector4 clipPlaneCameraSpace = new Vector4(camSpaceNormal.x, camSpaceNormal.y, camSpaceNormal.z, camSpaceDst);
+        //if (Mathf.Abs(camSpaceDst) > 0.2f)
+        //{
+            Vector4 clipPlaneCameraSpace = new Vector4(camSpaceNormal.x, camSpaceNormal.y, camSpaceNormal.z, plane.GetDistanceToPoint(source.transform.position));
 
             // Update projection based on new clip plane
             // Calculate matrix with player cam so that player camera settings (fov, etc) are used
             source.projectionMatrix = playerCam.CalculateObliqueMatrix(clipPlaneCameraSpace);
-        }
-        else
-        {
-            source.projectionMatrix = playerCam.projectionMatrix;
-        }
+        //}
+        //else
+        //{
+        //    source.projectionMatrix = playerCam.projectionMatrix;
+        //}
     }
 
     public void SetReflectionCamPositionAndRotation(Camera originCamera)
