@@ -5,8 +5,7 @@ using UnityEngine;
 
 public class MirrorPlane : MonoBehaviour
 {
-    Camera source;
-    Camera viewport;
+    public Camera source;
 
     public Plane plane;
 
@@ -14,19 +13,16 @@ public class MirrorPlane : MonoBehaviour
 
     RenderTexture viewTexture;
 
-    public bool isDisabled;
-
     public LayerMask layersToSwitch;
 
     public static List<MirrorPlane> mirrors = new List<MirrorPlane>();
 
-    public Dictionary<string, ReflectionCamera> attachedCameras;
-
     void Start()
     {
-        attachedCameras = new Dictionary<string, ReflectionCamera>();
+        source = transform.Find("Cam").gameObject.GetComponent<Camera>();
         viewTexture = new RenderTexture(Screen.width, Screen.height, 0);
         gameObject.GetComponent<Renderer>().material.SetTexture("_MainTex", viewTexture);
+        source.targetTexture = viewTexture;
 
         Vector3 mirrorsNormal = gameObject.transform.localRotation * new Vector3(0f, 1, 0f);
         plane = new Plane(mirrorsNormal, gameObject.transform.position);
@@ -34,70 +30,24 @@ public class MirrorPlane : MonoBehaviour
 
     public void Update()
     {
-
+        SetNearClipPlane();
+        SetReflectionCamPositionAndRotation(Camera.main);
+        Debug.DrawLine(transform.position, transform.position + plane.normal, Color.red);
     }
 
-    ReflectionCamera GetCam(MainCamera cam)
+    public void Render()
     {
-        if (attachedCameras.ContainsKey(cam.gameObject.name))
-        {
-            return attachedCameras[cam.gameObject.name];
-        } else
-        {
-            GameObject newCamObj = new GameObject();
-            newCamObj.SetActive(false);
-            newCamObj.hideFlags = HideFlags.DontSave;
-            newCamObj.name = "Camera_" + gameObject.name + "_" + newCamObj.GetHashCode().ToString();
-            Camera newCam = newCamObj.AddComponent<Camera>();
-            newCam.cullingMask = cam.gameObject.GetComponent<Camera>().cullingMask ^ layersToSwitch;
-            ReflectionCamera newRCam = newCamObj.AddComponent<ReflectionCamera>();
-
-            newCam.projectionMatrix = cam.gameObject.GetComponent<Camera>().projectionMatrix;
-            newCam.targetTexture = viewTexture;
-
-            newRCam.depth = cam.depth + 1;
-            newRCam.mirror = this;
-            newRCam.originCamera = cam;
-            cam.camerasToRender.Add(newCam);
-            attachedCameras[Camera.current.gameObject.name] = newRCam;
-
-            newRCam.SetPositionAndRotationByOriginCameraRecursively(cam.transform);
-            newCamObj.SetActive(true);
-
-            return newRCam;
-        }
-    }
-
-    private void OnWillRenderObject()
-    {
-        MainCamera rCam;
-
-        if (Camera.current.gameObject.name == "Scene Camera") { return; }
-
-        if (!plane.GetSide(Camera.current.transform.position)) { return; }
-
-        if (Camera.current.TryGetComponent(out rCam))
-        {
-            if (rCam.depth >= 5) { return; }
-
-            ReflectionCamera newrCam = GetCam(rCam);
-        }
-    }
-
-    private void OnBecameInvisible()
-    {
-        foreach (KeyValuePair<string, ReflectionCamera> cam in attachedCameras)
-        {
-            Destroy(cam.Value.gameObject);
-        }
-        attachedCameras.Clear();
+        GL.invertCulling = Game.Current().player.cam.gameObject.GetComponent<CameraFollow>().IsLookingThroughTheMirror() ^ Game.Current().mirrorTransitionController.playerBehindMirror;
+        SetReflectionCamPositionAndRotation(Camera.main);
+        SetNearClipPlane();
+        source.Render();
     }
 
     private void OnTriggerStay(Collider other)
     {
         if (canSwap && plane.GetSide(other.gameObject.transform.position) == false)
         {
-            Swap(other.gameObject.GetComponent<Rigidbody>());
+            Game.Current().mirrorTransitionController.TransferPlayer(this);
             canSwap = false;
         } else
         {
@@ -112,20 +62,66 @@ public class MirrorPlane : MonoBehaviour
 
     private void Swap(Rigidbody rb)
     {
-        rb.velocity = Vector3.Reflect(rb.velocity.normalized, plane.normal) * rb.velocity.magnitude;
-        Game.Current().MirrorSwap(layersToSwitch);
-        Camera.main.gameObject.GetComponent<CameraFollow>().FlipCamera(attachedCameras[Camera.main.gameObject.name]);
-        Camera.main.cullingMask ^= layersToSwitch;
+        
+    }
 
-        foreach (KeyValuePair<string, ReflectionCamera> keyvalue in attachedCameras)
+    void SetNearClipPlane()
+    {
+        // Learning resource:
+        // http://www.terathon.com/lengyel/Lengyel-Oblique.pdf
+        Transform clipPlane = transform;
+        Camera playerCam = Game.Current().player.cam;
+
+        Vector3 camSpacePos = source.worldToCameraMatrix.MultiplyPoint(clipPlane.position);
+        Vector3 camSpaceNormal = source.worldToCameraMatrix.MultiplyVector(plane.normal);
+        float camSpaceDst = -Vector3.Dot(camSpacePos, camSpaceNormal) + 0.05f;
+
+        // Don't use oblique clip plane if very close to portal as it seems this can cause some visual artifacts
+        if (Mathf.Abs(camSpaceDst) > 0.2f)
         {
-            keyvalue.Value.gameObject.GetComponent<Camera>().cullingMask ^= layersToSwitch;
+            Vector4 clipPlaneCameraSpace = new Vector4(camSpaceNormal.x, camSpaceNormal.y, camSpaceNormal.z, camSpaceDst);
+
+            // Update projection based on new clip plane
+            // Calculate matrix with player cam so that player camera settings (fov, etc) are used
+            source.projectionMatrix = playerCam.CalculateObliqueMatrix(clipPlaneCameraSpace);
+        }
+        else
+        {
+            source.projectionMatrix = playerCam.projectionMatrix;
         }
     }
 
-    private void OnDestroy()
+    public void SetReflectionCamPositionAndRotation(Camera originCamera)
     {
-        //Destroy(source.gameObject);
-        mirrors.Remove(this);
+        source.transform.position = originCamera.transform.position + (plane.normal * -2) * plane.GetDistanceToPoint(originCamera.transform.position);
+
+        float intersectionDistance;
+
+        Ray rayToMirror = new Ray(originCamera.transform.position, originCamera.transform.forward);
+        if (plane.Raycast(rayToMirror, out intersectionDistance))
+        {
+            Vector3 hitPoint = rayToMirror.GetPoint(intersectionDistance);
+            source.transform.LookAt(hitPoint);
+        }
+        else
+        {
+            rayToMirror = new Ray(originCamera.transform.position, originCamera.transform.forward * -1);
+            plane.Raycast(rayToMirror, out intersectionDistance);
+            Vector3 hitPoint = rayToMirror.GetPoint(intersectionDistance);
+
+            source.transform.LookAt(hitPoint);
+            Vector3 dir = source.transform.position - hitPoint;
+            source.transform.LookAt(source.transform.position + dir);
+        }
+    }
+
+    public static List<MirrorPlane> GetActiveMirrors()
+    {
+        List<MirrorPlane> mirrors = new List<MirrorPlane>
+        {
+            GameObject.Find("MirrorPlane").GetComponent<MirrorPlane>()
+        };
+
+        return mirrors;
     }
 }

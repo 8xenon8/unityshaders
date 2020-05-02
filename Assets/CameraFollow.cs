@@ -19,24 +19,17 @@ public class CameraFollow : MonoBehaviour
     float zoomMin = 1.5f;
     float zoomMax = 10f;
 
-    public bool disabled = false;
+    bool isLookingThroughMirror = false;
 
-    public Matrix4x4 m;
+    public MirrorPlane currentMirror;
 
     // Start is called before the first frame update
     void Start()
     {
         player = GameObject.Find("Player").GetComponent<Player>();
-        m = gameObject.GetComponent<Camera>().projectionMatrix;
     }
     void Update()
     {
-        gameObject.GetComponent<Camera>().projectionMatrix = m;
-
-        if (disabled)
-        {
-            return;
-        }
 
         zoom += Input.mouseScrollDelta.y;
 
@@ -61,7 +54,6 @@ public class CameraFollow : MonoBehaviour
         angleY = Mathf.Min(Mathf.Max(angleY, angleYMin), angleYMax);
 
         SetCameraPosition();
-        transform.LookAt(player.transform.position);
 
         if (Input.GetMouseButton(1))
         {
@@ -82,40 +74,94 @@ public class CameraFollow : MonoBehaviour
         vec.Normalize();
 
         RaycastHit hit;
+        MirrorPlane mirror;
+        Vector3 lookAt = player.transform.position;
+        bool isLookingThroughMirrorCurrentFrame = false;
+
         Physics.Raycast(player.transform.position, vec, out hit, zoom, Camera.main.cullingMask);
         
         if (hit.collider)
         {
-            transform.position = hit.point;
+            if (hit.collider.gameObject.TryGetComponent(out mirror))
+            {
+                isLookingThroughMirrorCurrentFrame = true;
+                Vector3 playerToMirrorVector = hit.point - player.transform.position;
+                transform.position = hit.point + Vector3.Reflect(vec, mirror.plane.normal) * (zoom - playerToMirrorVector.magnitude);
+                lookAt = hit.point;
+            }
+            else
+            {
+                transform.position = hit.point;
+            }
         } else
         {
             transform.position = player.transform.position + vec * zoom;
         }
+
+        transform.LookAt(lookAt);
+
+
+        if (isLookingThroughMirror != isLookingThroughMirrorCurrentFrame)
+        {
+            isLookingThroughMirror = isLookingThroughMirrorCurrentFrame;
+
+            foreach (Camera camera in Camera.allCameras)
+            {
+                Vector3 scale = new Vector3(-1, 1, 1);
+                camera.projectionMatrix = camera.projectionMatrix * Matrix4x4.Scale(scale);
+            }
+        }
     }
 
-    public void FlipCamera(ReflectionCamera reflectionCamera)
+    public void FlipCamera(MirrorPlane mirror)
     {
-        int i = Game.Current().isFlipped ? 1 : -1;
-        Vector3 cameraToPlayer = reflectionCamera.transform.position - player.transform.position;
-        angleX = (Game.Current().isFlipped ? Mathf.Atan2(cameraToPlayer.z, cameraToPlayer.x) : Mathf.Atan2(cameraToPlayer.x, cameraToPlayer.z)) * Mathf.Rad2Deg;
+        Vector3 cameraToPlayer = (mirror.transform.position - player.transform.position) * 2;
+        angleX = ((Game.Current().mirrorTransitionController.playerBehindMirror ^ IsLookingThroughTheMirror()) ? Mathf.Atan2(cameraToPlayer.z, cameraToPlayer.x) : Mathf.Atan2(cameraToPlayer.x, cameraToPlayer.z)) * Mathf.Rad2Deg;
     }
 
     void OnPreCull()
     {
-        Camera camera = gameObject.GetComponent<Camera>();
-        camera.ResetWorldToCameraMatrix();
-        camera.ResetProjectionMatrix();
-        Vector3 scale = new Vector3(Game.Current().isFlipped ? -1 : 1, 1, 1);
-        camera.projectionMatrix = camera.projectionMatrix * Matrix4x4.Scale(scale);
+        //Camera camera = gameObject.GetComponent<Camera>();
+        //foreach (Camera camera in Camera.allCameras)
+        //{
+        //    camera.ResetWorldToCameraMatrix();
+        //    camera.ResetProjectionMatrix();
+        //    Vector3 scale = new Vector3(IsLookingThroughTheMirror() ? -1 : 1, 1, 1);
+        //    camera.projectionMatrix = camera.projectionMatrix * Matrix4x4.Scale(scale);
+        //}
     }
 
-    void OnPreRender()
+    private void OnPreRender()
     {
-        GL.invertCulling = Game.Current().isFlipped;
+        GL.invertCulling = IsLookingThroughTheMirror();
     }
 
-    void OnPostRender()
+
+    private void OnPostRender()
     {
         GL.invertCulling = false;
+    }
+
+    public bool IsLookingThroughTheMirror()
+    {
+        float angleXRad = angleX * Mathf.Deg2Rad;
+        float x = Game.Current().isFlipped ? Mathf.Cos(angleXRad) : Mathf.Sin(angleXRad);
+        float z = Game.Current().isFlipped ? Mathf.Sin(angleXRad) : Mathf.Cos(angleXRad);
+
+        Vector3 vec = new Vector3(x, angleY, z);
+        vec.Normalize();
+
+        RaycastHit hit;
+        MirrorPlane mirror;
+        Vector3 lookAt = player.transform.position;
+
+        Physics.Raycast(player.transform.position, vec, out hit, zoom, Camera.main.cullingMask);
+
+        if (hit.collider && hit.collider.gameObject.TryGetComponent(out mirror))
+        {
+            return true;
+        }
+
+        return false;
     }
 }

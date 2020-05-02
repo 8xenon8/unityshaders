@@ -5,6 +5,7 @@ using UnityEngine;
 public class Player : MonoBehaviour
 {
     Rigidbody ball;
+    public Camera cam;
 
     public float speed = 1f;
 
@@ -12,6 +13,7 @@ public class Player : MonoBehaviour
     void Awake()
     {
         ball = GetComponent<Rigidbody>();
+        cam = GameObject.Find("Main Camera").GetComponent<Camera>();
     }
 
     // Update is called once per frame
