@@ -15,37 +15,19 @@ public class MainCamera : MonoBehaviour
 
     private void OnPreRender()
     {
-        GL.invertCulling = Game.Current().isFlipped;
+        GL.invertCulling = Game.Current().player.cam.gameObject.GetComponent<CameraFollow>().IsLookingThroughTheMirror() ^ Game.Current().mirrorTransitionController.playerBehindMirror;
     }
 
     private void OnPreCull()
     {
-        if (gameObject.GetComponent<Camera>() == Camera.main)
+        foreach (MirrorPlane mirror in MirrorPlane.GetActiveMirrors())
         {
-            foreach (Camera cam in camerasToRender)
-            {
-                ReflectionCamera rCam;
-                if (cam.gameObject.TryGetComponent(out rCam))
-                {
-                    rCam.SetPositionAndRotationByOriginCameraRecursively(gameObject.transform);
-                    rCam.gameObject.GetComponent<Camera>().Render();
-                }
-            }
+            mirror.Render();
         }
     }
 
     private void OnPostRender()
     {
         GL.invertCulling = false;
-    }
-
-    void ClearCameras()
-    {
-        foreach (Camera cam in camerasToRender)
-        {
-            cam.gameObject.GetComponent<ReflectionCamera>().ClearCameras();
-            Destroy(cam.gameObject);
-        }
-        camerasToRender.Clear();
     }
 }
