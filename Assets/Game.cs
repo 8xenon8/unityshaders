@@ -33,12 +33,7 @@ public class Game : MonoBehaviour
 
     public void MirrorSwap(LayerMask layersToSwitch)
     {
-        isFlipped = !isFlipped;
         visibleLayers ^= layersToSwitch;
-        foreach (Camera cam in Camera.allCameras)
-        {
-            cam.projectionMatrix *= Matrix4x4.Scale(new Vector3(-1, 1, 1));
-        }
 
         cullingController.HandleMirrorTraverse();
     }

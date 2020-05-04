@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
+using System.Linq;
 
 public class MirrorPlane : MonoBehaviour
 {
@@ -30,8 +31,6 @@ public class MirrorPlane : MonoBehaviour
 
     public void Update()
     {
-        SetNearClipPlane();
-        SetReflectionCamPositionAndRotation(Camera.main);
         Debug.DrawLine(transform.position, transform.position + plane.normal, Color.red);
     }
 
@@ -40,7 +39,28 @@ public class MirrorPlane : MonoBehaviour
         GL.invertCulling = Game.Current().player.cam.gameObject.GetComponent<CameraFollow>().IsLookingThroughTheMirror() ^ Game.Current().mirrorTransitionController.playerBehindMirror;
         SetReflectionCamPositionAndRotation(Camera.main);
         SetNearClipPlane();
+        gameObject.GetComponent<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.ShadowsOnly;
         source.Render();
+        gameObject.GetComponent<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
+    }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        Player player;
+        if (other.gameObject.TryGetComponent(out player))
+        {
+            player.crossingMirror = this;
+        }
+    }
+
+    private void OnTriggerExit(Collider other)
+    {
+        Player player;
+        if (other.gameObject.TryGetComponent(out player))
+        {
+            player.crossingMirror = null;
+        }
+        canSwap = true;
     }
 
     private void OnTriggerStay(Collider other)
@@ -49,50 +69,20 @@ public class MirrorPlane : MonoBehaviour
         {
             Game.Current().mirrorTransitionController.TransferPlayer(this);
             canSwap = false;
-        } else
-        {
-            canSwap = true;
         }
-    }
-
-    private void OnTriggerExit(Collider other)
-    {
-        canSwap = true;
-    }
-
-    private void Swap(Rigidbody rb)
-    {
-        
     }
 
     void SetNearClipPlane()
     {
-        // Learning resource:
-        // http://www.terathon.com/lengyel/Lengyel-Oblique.pdf
         Transform clipPlane = transform;
         Camera playerCam = Game.Current().player.cam;
 
         Vector3 camSpacePos = source.worldToCameraMatrix.MultiplyPoint(clipPlane.position);
         Vector3 camSpaceNormal = source.worldToCameraMatrix.MultiplyVector(plane.normal);
-        float camSpaceDst = -Vector3.Dot(camSpacePos, camSpaceNormal) + 0.05f;
-        //if (!Game.Current().mirrorTransitionController.playerBehindMirror)
-        //{
-        //    camSpaceDst *= -1;
-        //}
 
-        // Don't use oblique clip plane if very close to portal as it seems this can cause some visual artifacts
-        //if (Mathf.Abs(camSpaceDst) > 0.2f)
-        //{
-            Vector4 clipPlaneCameraSpace = new Vector4(camSpaceNormal.x, camSpaceNormal.y, camSpaceNormal.z, plane.GetDistanceToPoint(source.transform.position));
+        Vector4 clipPlaneCameraSpace = new Vector4(camSpaceNormal.x, camSpaceNormal.y, camSpaceNormal.z, plane.GetDistanceToPoint(source.transform.position));
 
-            // Update projection based on new clip plane
-            // Calculate matrix with player cam so that player camera settings (fov, etc) are used
-            source.projectionMatrix = playerCam.CalculateObliqueMatrix(clipPlaneCameraSpace);
-        //}
-        //else
-        //{
-        //    source.projectionMatrix = playerCam.projectionMatrix;
-        //}
+        source.projectionMatrix = playerCam.CalculateObliqueMatrix(clipPlaneCameraSpace);
     }
 
     public void SetReflectionCamPositionAndRotation(Camera originCamera)
@@ -121,11 +111,7 @@ public class MirrorPlane : MonoBehaviour
 
     public static List<MirrorPlane> GetActiveMirrors()
     {
-        List<MirrorPlane> mirrors = new List<MirrorPlane>
-        {
-            GameObject.Find("MirrorPlane").GetComponent<MirrorPlane>()
-        };
-
+        List<MirrorPlane> mirrors = FindObjectsOfType<MirrorPlane>().ToList();
         return mirrors;
     }
 }

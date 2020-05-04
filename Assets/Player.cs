@@ -9,11 +9,18 @@ public class Player : MonoBehaviour
 
     public float speed = 1f;
 
+    public MirrorPlane crossingMirror;
+
     // Start is called before the first frame update
     void Awake()
     {
         ball = GetComponent<Rigidbody>();
         cam = GameObject.Find("Main Camera").GetComponent<Camera>();
+    }
+
+    public bool BehindMirror()
+    {
+        return crossingMirror && crossingMirror.plane.GetSide(transform.position) == false;
     }
 
     // Update is called once per frame
@@ -50,5 +57,7 @@ public class Player : MonoBehaviour
         direction.Normalize();
 
         ball.AddForce(direction * speed * Time.deltaTime, ForceMode.Force);
+
+        cam.GetComponent<CameraFollow>().SetCameraByAngle();
     }
 }
