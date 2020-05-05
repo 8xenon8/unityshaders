@@ -38,6 +38,11 @@ public class CameraFollow : MonoBehaviour
         float offsetX = Input.GetAxis("Mouse X");
         float offsetY = Input.GetAxis("Mouse Y");
 
+        if (Game.Current().mirrorTransitionController.playerBehindMirror)
+        {
+            offsetX *= -1;
+        }
+
         angleX += offsetX * mouseSpeedX;
 
         if (angleX < 0)
@@ -58,7 +63,8 @@ public class CameraFollow : MonoBehaviour
         if (Input.GetMouseButton(1))
         {
             Camera.main.fieldOfView = 10;
-        } else
+        }
+        else
         {
             Camera.main.fieldOfView = 60;
         }

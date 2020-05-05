@@ -27,37 +27,39 @@ public class Player : MonoBehaviour
     void Update()
     {
 
+        cam.GetComponent<CameraFollow>().SetCameraByAngle();
+
         Vector3 pos = transform.position;
         Vector3 direction = Vector3.zero;
-        float angle = Camera.main.transform.rotation.eulerAngles.y;
+        float angle = cam.transform.rotation.eulerAngles.y;
 
-        int doFlip = Game.Current().isFlipped ? -1 : 1;
+        int doFlip = Game.Current().mirrorTransitionController.playerBehindMirror ? -1 : 1;
 
         if (Input.GetKey("w"))
         {
-            direction += Camera.main.transform.forward;
+            direction += cam.transform.forward;
         }
 
         if (Input.GetKey("s"))
         {
-            direction += Camera.main.transform.forward * -1;
+            direction += cam.transform.forward * -1;
         }
 
         if (Input.GetKey("d"))
         {
-            direction += Camera.main.transform.right * doFlip;
+            direction += cam.transform.right * doFlip;
         }
 
         if (Input.GetKey("a"))
         {
-            direction += Camera.main.transform.right * -1 * doFlip;
+            direction += cam.transform.right * -1 * doFlip;
         }
 
         direction.y = 0;
         direction.Normalize();
 
-        ball.AddForce(direction * speed * Time.deltaTime, ForceMode.Force);
+        Debug.DrawLine(transform.position, transform.position + cam.transform.forward * 5, Color.red);
 
-        cam.GetComponent<CameraFollow>().SetCameraByAngle();
+        ball.AddForce(direction * speed * Time.deltaTime, ForceMode.Force);
     }
 }
