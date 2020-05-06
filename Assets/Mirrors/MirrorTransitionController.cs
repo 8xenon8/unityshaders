@@ -17,6 +17,10 @@ public class MirrorTransitionController
         foreach (Camera cam in Camera.allCameras)
         {
             cam.cullingMask ^= mirror.layersToSwitch;
+            if (cam != Game.Current().player.cam)
+            {
+                cam.projectionMatrix *= Matrix4x4.Scale(new Vector3(-1, 1, 1));
+            }
         }
 
         Game.Current().MirrorSwap(mirror.layersToSwitch);

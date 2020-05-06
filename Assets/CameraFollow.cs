@@ -81,76 +81,92 @@ public class CameraFollow : MonoBehaviour
         Vector3 vec = new Vector3(x, angleY, z);
         vec.Normalize();
 
-        if (player.BehindMirror())
-        {
-            return;
-            Vector3 newPos = player.transform.position + vec * zoom;
-            if (player.crossingMirror.plane.GetSide(newPos) == false)
-            {
-                transform.position = newPos + player.crossingMirror.plane.GetDistanceToPoint(newPos) * -2 * player.crossingMirror.plane.normal;
-                isLookingThroughMirrorCurrentFrame = true;
-            } else
-            {
-                transform.position = newPos;
-            }
-            return;
-        }
-
         RaycastHit hit;
-        MirrorPlane mirror;
         Vector3 lookAt = player.transform.position;
 
         Physics.Raycast(player.transform.position, vec, out hit, zoom, Camera.main.cullingMask);
-
-        if (player.crossingMirror != null && player.crossingMirror.plane.GetSide(player.transform.position) == false)
-        {
-            if (player.crossingMirror.plane.GetSide(transform.position))
-            {
-                transform.position = player.transform.position + vec * zoom;
-            } else
-            {
-
-            }
-        }
-
         if (hit.collider)
         {
-            if (hit.collider.gameObject.TryGetComponent(out mirror))
-            {
-                isLookingThroughMirrorCurrentFrame = true;
-                Vector3 playerToMirrorVector = hit.point - player.transform.position;
-                transform.position = hit.point + Vector3.Reflect(vec, mirror.plane.normal) * (zoom - playerToMirrorVector.magnitude);
-                lookAt = hit.point;
-            }
-            else
-            {
-                transform.position = hit.point;
-            }
+            transform.position = hit.point;
         }
-        //else if (player.crossingMirror && player.crossingMirror.plane.GetSide(player.transform.position) == false)
-        //{
-        //    Debug.Log("1");
-        //    //Plane p = new Plane(player.crossingMirror.plane.normal, transform.position);
-        //    Utility.DrawCross(Vector3.Reflect(vec, player.crossingMirror.plane.normal), Color.red);
-        //    transform.position = Vector3.Reflect(vec, player.crossingMirror.plane.normal);
-        //}
         else
         {
-            transform.position = player.transform.position + vec * zoom;
+            Vector3 newPos = player.transform.position + vec * zoom;
+            transform.position = newPos;
         }
+        transform.LookAt(player.transform.position);
+        return;
 
-        transform.LookAt(lookAt);
+        //if (player.BehindMirror())
+        //{
+        //    return;
+        //    Vector3 newPos = player.transform.position + vec * zoom;
+        //    if (player.crossingMirror.plane.GetSide(newPos) == false)
+        //    {
+        //        transform.position = newPos + player.crossingMirror.plane.GetDistanceToPoint(newPos) * -2 * player.crossingMirror.plane.normal;
+        //        isLookingThroughMirrorCurrentFrame = true;
+        //    } else
+        //    {
+        //        transform.position = newPos;
+        //    }
+        //    return;
+        //}
 
-        if (isLookingThroughMirror != isLookingThroughMirrorCurrentFrame)
-        {
-            isLookingThroughMirror = isLookingThroughMirrorCurrentFrame;
+        //RaycastHit hit;
+        //MirrorPlane mirror;
+        //Vector3 lookAt = player.transform.position;
 
-            foreach (Camera camera in Camera.allCameras)
-            {
-                Vector3 scale = new Vector3(-1, 1, 1);
-                camera.projectionMatrix = camera.projectionMatrix * Matrix4x4.Scale(scale);
-            }
-        }
+        //Physics.Raycast(player.transform.position, vec, out hit, zoom, Camera.main.cullingMask);
+
+        //if (player.crossingMirror != null && player.crossingMirror.plane.GetSide(player.transform.position) == false)
+        //{
+        //    if (player.crossingMirror.plane.GetSide(transform.position))
+        //    {
+        //        transform.position = player.transform.position + vec * zoom;
+        //    } else
+        //    {
+
+        //    }
+        //}
+
+        //if (hit.collider)
+        //{
+        //    if (hit.collider.gameObject.TryGetComponent(out mirror))
+        //    {
+        //        isLookingThroughMirrorCurrentFrame = true;
+        //        Vector3 playerToMirrorVector = hit.point - player.transform.position;
+        //        transform.position = hit.point + Vector3.Reflect(vec, mirror.plane.normal) * (zoom - playerToMirrorVector.magnitude);
+        //        lookAt = hit.point;
+        //    }
+        //    else
+        //    {
+        //        transform.position = hit.point;
+        //    }
+        //}
+        ////else if (player.crossingMirror && player.crossingMirror.plane.GetSide(player.transform.position) == false)
+        ////{
+        ////    Debug.Log("1");
+        ////    //Plane p = new Plane(player.crossingMirror.plane.normal, transform.position);
+        ////    Utility.DrawCross(Vector3.Reflect(vec, player.crossingMirror.plane.normal), Color.red);
+        ////    transform.position = Vector3.Reflect(vec, player.crossingMirror.plane.normal);
+        ////}
+        //else
+        //{
+        //    transform.position = player.transform.position + vec * zoom;
+        //}
+
+        //transform.LookAt(lookAt);
+
+        //if (isLookingThroughMirror != isLookingThroughMirrorCurrentFrame)
+        //{
+        //    isLookingThroughMirror = isLookingThroughMirrorCurrentFrame;
+
+        //    foreach (Camera camera in Camera.allCameras)
+        //    {
+        //        Vector3 scale = new Vector3(-1, 1, 1);
+        //        camera.projectionMatrix = camera.projectionMatrix * Matrix4x4.Scale(scale);
+        //    }
+        //}
     }
 
     public void FlipCamera(MirrorPlane mirror)

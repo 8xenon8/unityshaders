@@ -41,6 +41,14 @@ public class MirrorPlane : MonoBehaviour
         SetNearClipPlane();
         gameObject.GetComponent<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.ShadowsOnly;
         source.Render();
+        if (Game.Current().mirrorTransitionController.playerBehindMirror)
+        {
+            gameObject.GetComponent<Renderer>().material.SetInt("_Inverse", 1);
+        } else
+        {
+            gameObject.GetComponent<Renderer>().material.SetInt("_Inverse", 1);
+        }
+        
         gameObject.GetComponent<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
     }
 
@@ -65,7 +73,7 @@ public class MirrorPlane : MonoBehaviour
 
     private void OnTriggerStay(Collider other)
     {
-        if (canSwap && plane.GetSide(other.gameObject.transform.position) == false)
+        if (canSwap && plane.GetSide(other.gameObject.transform.position) == true)
         {
             Game.Current().mirrorTransitionController.TransferPlayer(this);
             canSwap = false;
@@ -78,11 +86,13 @@ public class MirrorPlane : MonoBehaviour
         Camera playerCam = Game.Current().player.cam;
 
         Vector3 camSpacePos = source.worldToCameraMatrix.MultiplyPoint(clipPlane.position);
-        Vector3 camSpaceNormal = source.worldToCameraMatrix.MultiplyVector(plane.normal);
+        Vector3 camSpaceNormal = source.worldToCameraMatrix.MultiplyVector(transform.localToWorldMatrix.MultiplyVector(plane.normal));
 
-        Vector4 clipPlaneCameraSpace = new Vector4(camSpaceNormal.x, camSpaceNormal.y, camSpaceNormal.z, plane.GetDistanceToPoint(source.transform.position));
+        Vector3 normal = source.worldToCameraMatrix.MultiplyVector(plane.normal * -1);
 
-        source.projectionMatrix = playerCam.CalculateObliqueMatrix(clipPlaneCameraSpace);
+        Vector4 clipPlaneCameraSpace = new Vector4(normal.x, normal.y, normal.z, -Vector3.Dot( source.worldToCameraMatrix.MultiplyPoint(transform.position), normal));
+
+        source.projectionMatrix = source.CalculateObliqueMatrix(clipPlaneCameraSpace);
     }
 
     public void SetReflectionCamPositionAndRotation(Camera originCamera)

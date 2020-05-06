@@ -2,7 +2,7 @@
 {
 	Properties
 	{
-		_InactiveColour("Inactive Colour", Color) = (1, 1, 1, 1)
+		_Inverse("Inverse", int) = 0
 	}
 		SubShader
 	{
@@ -29,9 +29,7 @@
 			};
 
 			sampler2D _MainTex;
-			float4 _InactiveColour;
-			int displayMask; // set to 1 to display texture, otherwise will draw test colour
-
+			int _Inverse;
 
 			v2f vert(appdata v)
 			{
@@ -44,7 +42,10 @@
 			fixed4 frag(v2f i) : SV_Target
 			{
 				float2 uv = i.screenPos.xy / i.screenPos.w;
-				uv.x = 1 - uv.x;
+				if (_Inverse == 1)
+				{
+					uv.x = 1 - uv.x;
+				}
 				fixed4 portalCol = tex2D(_MainTex, uv);
 				return portalCol;
 			}
