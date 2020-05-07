@@ -23,11 +23,20 @@ public class CameraFollow : MonoBehaviour
 
     public MirrorPlane currentMirror;
 
+    public Matrix4x4 m;
+
     // Start is called before the first frame update
     void Start()
     {
         player = GameObject.Find("Player").GetComponent<Player>();
+        m = gameObject.GetComponent<Camera>().projectionMatrix;
     }
+
+    private void Update()
+    {
+        //gameObject.GetComponent<Camera>().projectionMatrix = m;
+    }
+
     public void SetCameraByAngle()
     {
 

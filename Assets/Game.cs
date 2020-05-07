@@ -23,7 +23,11 @@ public class Game : MonoBehaviour
         player = GameObject.Find("Player").GetComponent<Player>();
         
         cullingController.HandleMirrorTraverse();
-        Camera.main.cullingMask = visibleLayers;
+
+        foreach (Camera cam in Camera.allCameras)
+        {
+            cam.cullingMask = visibleLayers;
+        }
     }
 
     public static Game Current()
