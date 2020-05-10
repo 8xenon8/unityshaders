@@ -10,6 +10,7 @@ public class Player : MonoBehaviour
     public float speed = 1f;
 
     public MirrorPlane crossingMirror;
+    public bool mirrorSide;
 
     // Start is called before the first frame update
     void Awake()

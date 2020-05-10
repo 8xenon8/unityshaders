@@ -9,10 +9,10 @@ public class MirrorTransitionController
 
         Game.Current().player.GetComponent<Rigidbody>().velocity = Vector3.Reflect(Game.Current().player.GetComponent<Rigidbody>().velocity, mirror.plane.normal);
 
-        if (Game.Current().player.cam.GetComponent<CameraFollow>().IsLookingThroughTheMirror() == false)
-        {
+        //if (Game.Current().player.cam.GetComponent<CameraFollow>().IsLookingThroughTheMirror() == false)
+        //{
             Game.Current().player.cam.projectionMatrix *= Matrix4x4.Scale(new Vector3(-1, 1, 1));
-        }
+        //}
 
         foreach (Camera cam in Camera.allCameras)
         {
