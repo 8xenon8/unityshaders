@@ -7,6 +7,8 @@ public class Player : MonoBehaviour
     Rigidbody ball;
     public Camera cam;
 
+    public Vector3 forward;
+
     public float speed = 1f;
 
     public MirrorPlane crossingMirror;
@@ -30,9 +32,7 @@ public class Player : MonoBehaviour
 
         cam.GetComponent<CameraFollow>().SetCameraByAngle();
 
-        Vector3 pos = transform.position;
         Vector3 direction = Vector3.zero;
-        float angle = cam.transform.rotation.eulerAngles.y;
 
         int doFlip = Game.Current().mirrorTransitionController.playerBehindMirror ? -1 : 1;
 
@@ -56,11 +56,13 @@ public class Player : MonoBehaviour
             direction += cam.transform.right * -1 * doFlip;
         }
 
-        direction.y = 0;
-        direction.Normalize();
+        if (direction != Vector3.zero)
+        {
+            direction = Vector3.ProjectOnPlane(direction, GravityHelper.up).normalized;
+            ball.AddForce(direction * speed * Time.deltaTime, ForceMode.Force);
+            forward = direction;
+        }
 
-        Debug.DrawLine(transform.position, transform.position + cam.transform.forward * 5, Color.red);
-
-        ball.AddForce(direction * speed * Time.deltaTime, ForceMode.Force);
+        Debug.DrawLine(transform.position, transform.position + direction * speed * Time.deltaTime * 10, Color.yellow);
     }
 }

@@ -85,9 +85,20 @@ public class CameraFollow : MonoBehaviour
         float x = Mathf.Sin(angleXRad);
         float z = Mathf.Cos(angleXRad);
 
+        Vector3 up = GravityHelper.up;
+        Vector3 forward = GravityHelper.forward;
+        Vector3 right = GravityHelper.right;
+
+        Debug.DrawRay(player.transform.position, up, Color.red, 0, false);
+        Debug.DrawRay(player.transform.position, forward, Color.blue, 0, false);
+        Debug.DrawRay(player.transform.position, right, Color.black, 0, false);
+
+        Debug.DrawRay(player.transform.position, Vector3.forward, Color.yellow, 0, false);
+
         bool isLookingThroughMirrorCurrentFrame = false;
 
-        Vector3 vec = new Vector3(x, angleY, z);
+        Vector3 vec = forward * z + right * x + up * angleY;
+
         vec.Normalize();
 
         RaycastHit hit;
@@ -103,7 +114,11 @@ public class CameraFollow : MonoBehaviour
             Vector3 newPos = player.transform.position + vec * zoom;
             transform.position = newPos;
         }
-        transform.LookAt(player.transform.position);
+
+        transform.rotation = Quaternion.LookRotation(player.transform.position - transform.position, up);
+        //transform.LookAt(player.transform.position);
+
+        //Physics.gravity = new Vector3(-9, 0, 0);
         return;
 
         //if (player.BehindMirror())
@@ -183,11 +198,6 @@ public class CameraFollow : MonoBehaviour
         //Vector3 cameraToPlayer = (mirror.transform.position - player.transform.position) * 2;
         Vector3 playerToReflection = mirror.source.transform.position - player.gameObject.transform.position;
         angleX = Mathf.Atan2(playerToReflection.x, playerToReflection.z) * Mathf.Rad2Deg;
-    }
-
-    void OnPreCull()
-    {
-        SetCameraPosition();
     }
 
     public bool IsLookingThroughTheMirror()
