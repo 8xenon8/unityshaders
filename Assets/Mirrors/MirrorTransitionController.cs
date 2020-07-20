@@ -29,6 +29,10 @@ public class MirrorTransitionController
 
         playerBehindMirror = !playerBehindMirror;
 
-        Game.Current().player.cam.GetComponent<CameraFollow>().FlipCamera(mirror);
+        DimensionHelper.right *= -1;
+
+        //DimensionHelper.SetDimensions(mirror.transform.forward * -1, Vector3.Reflect(DimensionHelper.forward, mirror.plane.normal));
+
+        //Game.Current().player.cam.GetComponent<CameraFollow>().FlipCamera(mirror);
     }
 }

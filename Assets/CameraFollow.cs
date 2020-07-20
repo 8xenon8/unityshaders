@@ -85,15 +85,15 @@ public class CameraFollow : MonoBehaviour
         float x = Mathf.Sin(angleXRad);
         float z = Mathf.Cos(angleXRad);
 
-        Vector3 up = GravityHelper.up;
-        Vector3 forward = GravityHelper.forward;
-        Vector3 right = GravityHelper.right;
+        Vector3 up = DimensionHelper.up;
+        Vector3 forward = DimensionHelper.forward;
+        Vector3 right = DimensionHelper.right;
 
         Debug.DrawRay(player.transform.position, up, Color.red, 0, false);
         Debug.DrawRay(player.transform.position, forward, Color.blue, 0, false);
         Debug.DrawRay(player.transform.position, right, Color.black, 0, false);
 
-        Debug.DrawRay(player.transform.position, Vector3.forward, Color.yellow, 0, false);
+        //Debug.DrawRay(player.transform.position, Vector3.forward, Color.yellow, 0, false);
 
         bool isLookingThroughMirrorCurrentFrame = false;
 

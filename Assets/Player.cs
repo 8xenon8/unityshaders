@@ -58,7 +58,7 @@ public class Player : MonoBehaviour
 
         if (direction != Vector3.zero)
         {
-            direction = Vector3.ProjectOnPlane(direction, GravityHelper.up).normalized;
+            direction = Vector3.ProjectOnPlane(direction, DimensionHelper.up).normalized;
             ball.AddForce(direction * speed * Time.deltaTime, ForceMode.Force);
             forward = direction;
         }
