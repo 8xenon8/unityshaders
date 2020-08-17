@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System;
 using UnityEngine;
 
 public class CameraFollow : MonoBehaviour
@@ -47,11 +46,6 @@ public class CameraFollow : MonoBehaviour
         float offsetX = Input.GetAxis("Mouse X");
         float offsetY = Input.GetAxis("Mouse Y");
 
-        if (Game.Current().mirrorTransitionController.playerBehindMirror)
-        {
-            offsetX *= -1;
-        }
-
         angleX += offsetX * mouseSpeedX;
 
         if (angleX < 0)
@@ -89,9 +83,9 @@ public class CameraFollow : MonoBehaviour
         Vector3 forward = DimensionHelper.forward;
         Vector3 right = DimensionHelper.right;
 
-        Debug.DrawRay(player.transform.position, up, Color.red, 0, false);
-        Debug.DrawRay(player.transform.position, forward, Color.blue, 0, false);
-        Debug.DrawRay(player.transform.position, right, Color.black, 0, false);
+        Debug.DrawRay(player.transform.position, up * 5, Color.red, 0, false);
+        Debug.DrawRay(player.transform.position, forward * 5, Color.blue, 0, false);
+        Debug.DrawRay(player.transform.position, right * 5, Color.black, 0, false);
 
         //Debug.DrawRay(player.transform.position, Vector3.forward, Color.yellow, 0, false);
 
@@ -116,9 +110,7 @@ public class CameraFollow : MonoBehaviour
         }
 
         transform.rotation = Quaternion.LookRotation(player.transform.position - transform.position, up);
-        //transform.LookAt(player.transform.position);
 
-        //Physics.gravity = new Vector3(-9, 0, 0);
         return;
 
         //if (player.BehindMirror())
@@ -193,13 +185,6 @@ public class CameraFollow : MonoBehaviour
         //}
     }
 
-    public void FlipCamera(MirrorPlane mirror)
-    {
-        //Vector3 cameraToPlayer = (mirror.transform.position - player.transform.position) * 2;
-        Vector3 playerToReflection = mirror.source.transform.position - player.gameObject.transform.position;
-        angleX = Mathf.Atan2(playerToReflection.x, playerToReflection.z) * Mathf.Rad2Deg;
-    }
-
     public bool IsLookingThroughTheMirror()
     {
         return isLookingThroughMirror;
@@ -223,5 +208,11 @@ public class CameraFollow : MonoBehaviour
         }
 
         return false;
+    }
+
+    public void FlipCamera(MirrorPlane mirror)
+    {
+        Vector3 playerToReflection = mirror.source.transform.position - player.gameObject.transform.position;
+        angleX = Mathf.Atan2(playerToReflection.x * (Game.Current().mirrorTransitionController.playerBehindMirror ? -1 : 1), playerToReflection.z) * Mathf.Rad2Deg;
     }
 }

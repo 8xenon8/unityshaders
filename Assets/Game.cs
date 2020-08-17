@@ -39,6 +39,11 @@ public class Game : MonoBehaviour
     {
         visibleLayers ^= layersToSwitch;
 
+        foreach (Camera cam in Camera.allCameras)
+        {
+            cam.cullingMask ^= layersToSwitch;
+        }
+
         cullingController.HandleMirrorTraverse();
     }
 }

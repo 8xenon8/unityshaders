@@ -1,11 +1,14 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 public class MainCamera : MonoBehaviour
 {
     public List<Camera> camerasToRender;
-    public int depth;
+
+    private bool isInverted          = false;
+    private bool invertCullingGlobal = false;
 
     // Start is called before the first frame update
     void Start()
@@ -15,7 +18,7 @@ public class MainCamera : MonoBehaviour
 
     private void OnPreRender()
     {
-        GL.invertCulling = Game.Current().player.cam.gameObject.GetComponent<CameraFollow>().IsLookingThroughTheMirror() ^ Game.Current().mirrorTransitionController.playerBehindMirror;
+        GL.invertCulling = isInverted;
     }
 
     private void OnPreCull()
@@ -28,6 +31,21 @@ public class MainCamera : MonoBehaviour
 
     private void OnPostRender()
     {
-        GL.invertCulling = false;
+        GL.invertCulling = invertCullingGlobal;
+    }
+
+    public void Invert()
+    {
+        Camera cam = GetComponent<Camera>();
+
+        cam.projectionMatrix *= Matrix4x4.Scale(new Vector3(-1, 1, 1));
+        isInverted            = !isInverted;
+
+        foreach (MirrorPlane mirror in MirrorPlane.GetActiveMirrors())
+        {
+            Renderer r = mirror.GetComponent<Renderer>();
+
+            r.material.SetInt("_Inverse", r.material.GetInt("_Inverse") == 0 ? 1 : 0);
+        }
     }
 }
