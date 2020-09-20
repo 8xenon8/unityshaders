@@ -29,8 +29,17 @@ public class Player : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        CameraFollow camFollow = cam.GetComponent<CameraFollow>();
 
-        cam.GetComponent<CameraFollow>().SetCameraByAngle();
+        Vector3 forward = cam.transform.forward;
+        Vector3 right   = cam.transform.right;
+
+        if (camFollow.isLookingThroughMirror) {
+            forward = Vector3.Reflect(forward, camFollow.currentMirror.plane.normal);
+            right = Vector3.Reflect(right, camFollow.currentMirror.plane.normal) * -1;
+        };
+
+        camFollow.SetCameraByAngle();
 
         Vector3 direction = Vector3.zero;
 
@@ -38,22 +47,22 @@ public class Player : MonoBehaviour
 
         if (Input.GetKey("w"))
         {
-            direction += cam.transform.forward;
+            direction += forward;
         }
 
         if (Input.GetKey("s"))
         {
-            direction += cam.transform.forward * -1;
+            direction += forward * -1;
         }
 
         if (Input.GetKey("d"))
         {
-            direction += cam.transform.right * doFlip;
+            direction += right * doFlip;
         }
 
         if (Input.GetKey("a"))
         {
-            direction += cam.transform.right * -1 * doFlip;
+            direction += right * -1 * doFlip;
         }
 
         if (direction != Vector3.zero)

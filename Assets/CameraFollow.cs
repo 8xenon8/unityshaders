@@ -1,5 +1,6 @@
 ﻿using System;
 using UnityEngine;
+using UnityEngine.Diagnostics;
 
 public class CameraFollow : MonoBehaviour
 {
@@ -17,10 +18,9 @@ public class CameraFollow : MonoBehaviour
     float zoom = 3f;
     float zoomMin = 1.5f;
     float zoomMax = 10f;
-
-    bool isLookingThroughMirror = false;
-
+    
     public MirrorPlane currentMirror;
+    public bool isLookingThroughMirror = false;
 
     public Matrix4x4 m;
 
@@ -95,23 +95,21 @@ public class CameraFollow : MonoBehaviour
 
         vec.Normalize();
 
-        RaycastHit hit;
-        Vector3 lookAt = player.transform.position;
+        Debug.DrawLine(player.transform.position, player.transform.position + vec * zoom, Color.red);
 
-        Physics.Raycast(player.transform.position, vec, out hit, zoom, Camera.main.cullingMask);
-        if (hit.collider)
-        {
-            transform.position = hit.point;
-        }
-        else
-        {
-            Vector3 newPos = player.transform.position + vec * zoom;
-            transform.position = newPos;
-        }
+        //RaycastHit hit;
+        //Vector3 lookAt = player.transform.position;
 
-        transform.rotation = Quaternion.LookRotation(player.transform.position - transform.position, up);
-
-        return;
+        //Physics.Raycast(player.transform.position, vec, out hit, zoom, Camera.main.cullingMask);
+        //if (hit.collider)
+        //{
+        //    transform.position = hit.point;
+        //}
+        //else
+        //{
+        //    Vector3 newPos = player.transform.position + vec * zoom;
+        //    transform.position = newPos;
+        //}
 
         //if (player.BehindMirror())
         //{
@@ -128,11 +126,11 @@ public class CameraFollow : MonoBehaviour
         //    return;
         //}
 
-        //RaycastHit hit;
-        //MirrorPlane mirror;
-        //Vector3 lookAt = player.transform.position;
+        RaycastHit hit;
+        MirrorPlane mirror;
+        Vector3 lookAt = player.transform.position;
 
-        //Physics.Raycast(player.transform.position, vec, out hit, zoom, Camera.main.cullingMask);
+        Physics.Raycast(player.transform.position, vec, out hit, zoom, Camera.main.cullingMask);
 
         //if (player.crossingMirror != null && player.crossingMirror.plane.GetSide(player.transform.position) == false)
         //{
@@ -145,44 +143,47 @@ public class CameraFollow : MonoBehaviour
         //    }
         //}
 
-        //if (hit.collider)
+        if (hit.collider)
+        {
+            if (hit.collider.gameObject.TryGetComponent(out mirror))
+            {
+                isLookingThroughMirrorCurrentFrame = true;
+                Vector3 playerToMirrorVector = hit.point - player.transform.position;
+                transform.position = hit.point + Vector3.Reflect(vec, mirror.plane.normal) * (zoom - playerToMirrorVector.magnitude);
+                lookAt = hit.point;
+                currentMirror = mirror;
+            }
+            else
+            {
+                transform.position = hit.point;
+                lookAt = player.transform.position;
+            }
+        }
+        //else if (player.crossingMirror && player.crossingMirror.plane.GetSide(player.transform.position) == false)
         //{
-        //    if (hit.collider.gameObject.TryGetComponent(out mirror))
-        //    {
-        //        isLookingThroughMirrorCurrentFrame = true;
-        //        Vector3 playerToMirrorVector = hit.point - player.transform.position;
-        //        transform.position = hit.point + Vector3.Reflect(vec, mirror.plane.normal) * (zoom - playerToMirrorVector.magnitude);
-        //        lookAt = hit.point;
-        //    }
-        //    else
-        //    {
-        //        transform.position = hit.point;
-        //    }
+        //    Debug.Log("1");
+        //    //Plane p = new Plane(player.crossingMirror.plane.normal, transform.position);
+        //    Utility.DrawCross(Vector3.Reflect(vec, player.crossingMirror.plane.normal), Color.red);
+        //    transform.position = Vector3.Reflect(vec, player.crossingMirror.plane.normal);
         //}
-        ////else if (player.crossingMirror && player.crossingMirror.plane.GetSide(player.transform.position) == false)
-        ////{
-        ////    Debug.Log("1");
-        ////    //Plane p = new Plane(player.crossingMirror.plane.normal, transform.position);
-        ////    Utility.DrawCross(Vector3.Reflect(vec, player.crossingMirror.plane.normal), Color.red);
-        ////    transform.position = Vector3.Reflect(vec, player.crossingMirror.plane.normal);
-        ////}
-        //else
-        //{
-        //    transform.position = player.transform.position + vec * zoom;
-        //}
+        else
+        {
+            transform.position = player.transform.position + vec * zoom;
+        }
 
+        if (isLookingThroughMirrorCurrentFrame != isLookingThroughMirror)
+        {
+            player.cam.GetComponent<MainCamera>().Invert();
+            player.cam.cullingMask ^= currentMirror.layersToSwitch;
+            isLookingThroughMirror = isLookingThroughMirrorCurrentFrame;
+        }
+
+
+        Utility.DrawCross(lookAt, Color.red);
         //transform.LookAt(lookAt);
+        transform.rotation = Quaternion.LookRotation(lookAt - transform.position, up);
 
-        //if (isLookingThroughMirror != isLookingThroughMirrorCurrentFrame)
-        //{
-        //    isLookingThroughMirror = isLookingThroughMirrorCurrentFrame;
-
-        //    foreach (Camera camera in Camera.allCameras)
-        //    {
-        //        Vector3 scale = new Vector3(-1, 1, 1);
-        //        camera.projectionMatrix = camera.projectionMatrix * Matrix4x4.Scale(scale);
-        //    }
-        //}
+        return;
     }
 
     public bool IsLookingThroughTheMirror()
@@ -213,6 +214,10 @@ public class CameraFollow : MonoBehaviour
     public void FlipCamera(MirrorPlane mirror)
     {
         Vector3 playerToReflection = mirror.source.transform.position - player.gameObject.transform.position;
-        angleX = Mathf.Atan2(playerToReflection.x * (Game.Current().mirrorTransitionController.playerBehindMirror ? -1 : 1), playerToReflection.z) * Mathf.Rad2Deg;
+        if (isLookingThroughMirror) {
+            angleX = Mathf.Atan2(playerToReflection.z, playerToReflection.x * (Game.Current().mirrorTransitionController.playerBehindMirror ? -1 : 1)) * Mathf.Rad2Deg;
+        } else {
+            angleX = Mathf.Atan2(playerToReflection.x * (Game.Current().mirrorTransitionController.playerBehindMirror ? -1 : 1), playerToReflection.z) * Mathf.Rad2Deg;
+        }
     }
 }

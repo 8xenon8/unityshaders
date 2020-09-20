@@ -12,6 +12,7 @@ public class MirrorPlane : MonoBehaviour
     public Camera source;
 
     public Plane plane;
+    private bool camSide;
 
     private protected bool canSwap = true;
 
@@ -38,7 +39,14 @@ public class MirrorPlane : MonoBehaviour
     {
         Vector3 p = plane.ClosestPointOnPlane(transform.position);
         Debug.DrawLine(p, p + plane.normal, Color.red, 0, false);
-        //Debug.DrawLine(transform.position, transform.position + transform.forward, Color.red, 0, false);
+
+        bool side = plane.GetSide(Game.Current().player.cam.transform.position);
+        if (side != camSide)
+        {
+            camSide = side;
+            Vector3 mirrorsNormal = gameObject.transform.localRotation * new Vector3(0f, 1, 0f);
+            plane = new Plane(mirrorsNormal, gameObject.transform.position + transform.up * thickness * 0.5f * (camSide ? 1 : -1));
+        }
     }
 
     public void Render()
@@ -91,8 +99,8 @@ public class MirrorPlane : MonoBehaviour
     {
         source.ResetProjectionMatrix();
 
-        Vector3   normal               = source.worldToCameraMatrix.MultiplyVector(plane.normal);
-        float     dot                  = -Vector3.Dot(source.worldToCameraMatrix.MultiplyPoint(transform.position + transform.up * 0.5f), normal);
+        Vector3   normal               = source.worldToCameraMatrix.MultiplyVector(plane.normal) * (camSide ? 1 : -1);
+        float     dot                  = -Vector3.Dot(source.worldToCameraMatrix.MultiplyPoint(transform.position + transform.up * 0.5f * (camSide ? 1 : -1)), normal);
         Vector4   clipPlaneCameraSpace = new Vector4(normal.x, normal.y, normal.z, dot);
 
         if (Mathf.Abs(dot) > 0.001f)
