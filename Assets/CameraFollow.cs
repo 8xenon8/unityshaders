@@ -213,11 +213,7 @@ public class CameraFollow : MonoBehaviour
 
     public void FlipCamera(MirrorPlane mirror)
     {
-        Vector3 playerToReflection = mirror.source.transform.position - player.gameObject.transform.position;
-        if (isLookingThroughMirror) {
-            angleX = Mathf.Atan2(playerToReflection.z, playerToReflection.x * (Game.Current().mirrorTransitionController.playerBehindMirror ? -1 : 1)) * Mathf.Rad2Deg;
-        } else {
-            angleX = Mathf.Atan2(playerToReflection.x * (Game.Current().mirrorTransitionController.playerBehindMirror ? -1 : 1), playerToReflection.z) * Mathf.Rad2Deg;
-        }
+        Vector3 playerToReflection = (isLookingThroughMirror ? Camera.main.transform.position : mirror.source.transform.position) - player.gameObject.transform.position;
+        angleX = Mathf.Atan2(playerToReflection.x * (Game.Current().mirrorTransitionController.playerBehindMirror ? -1 : 1), playerToReflection.z) * Mathf.Rad2Deg;
     }
 }
