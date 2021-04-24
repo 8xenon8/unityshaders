@@ -14,11 +14,14 @@ public class Player : MonoBehaviour
     public MirrorPlane crossingMirror;
     public bool mirrorSide;
 
+    private Resizable.ResizablePlayer resizablePlayer;
+
     // Start is called before the first frame update
     void Awake()
     {
         ball = GetComponent<Rigidbody>();
         cam = GameObject.Find("Main Camera").GetComponent<Camera>();
+        resizablePlayer = GetComponent<Resizable.ResizablePlayer>();
     }
 
     public bool BehindMirror()
@@ -68,7 +71,7 @@ public class Player : MonoBehaviour
         if (direction != Vector3.zero)
         {
             direction = Vector3.ProjectOnPlane(direction, DimensionHelper.up).normalized;
-            ball.AddForce(direction * speed * Time.deltaTime, ForceMode.Force);
+            ball.AddForce(direction * speed * Time.deltaTime * resizablePlayer.currentScale, ForceMode.Force);
             forward = direction;
         }
 

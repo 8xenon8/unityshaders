@@ -48,4 +48,9 @@ public class MainCamera : MonoBehaviour
             r.material.SetInt("_Inverse", r.material.GetInt("_Inverse") == 0 ? 1 : 0);
         }
     }
+
+    void Update()
+    {
+        //Camera.main.nearClipPlane = 0.001f;
+    }
 }

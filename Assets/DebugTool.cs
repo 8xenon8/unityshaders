@@ -16,11 +16,11 @@ public class DebugTool : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (Input.GetKeyDown("r"))
-        {
-            Camera cam = Game.Current().player.cam;
+        //if (Input.GetKeyDown("r"))
+        //{
+        //    Camera cam = Game.Current().player.cam;
 
-            cam.GetComponent<MainCamera>().Invert();
-        }
+        //    cam.GetComponent<MainCamera>().Invert();
+        //}
     }
 }

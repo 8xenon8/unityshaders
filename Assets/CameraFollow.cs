@@ -18,21 +18,30 @@ public class CameraFollow : MonoBehaviour
     float zoom = 3f;
     float zoomMin = 1.5f;
     float zoomMax = 10f;
+
+    float distancePadding = 0.3f;
     
     public MirrorPlane currentMirror;
     public bool isLookingThroughMirror = false;
 
-    public Matrix4x4 m;
+    float initialFieldOfView;
+
+    private Resizable.ResizablePlayer resisablePlayer;
 
     // Start is called before the first frame update
     void Start()
     {
-        player = GameObject.Find("Player").GetComponent<Player>();
-        m = gameObject.GetComponent<Camera>().projectionMatrix;
+        GameObject playerObject = GameObject.Find("Player");
+        player = playerObject.GetComponent<Player>();
+        resisablePlayer = playerObject.GetComponent<Resizable.ResizablePlayer>();
+
+        initialFieldOfView = Camera.main.fieldOfView;
     }
 
-    private void Update()
+    public void Update()
     {
+        //Camera.main.fieldOfView = Mathf.Round(initialFieldOfView * resisablePlayer.currentScale);
+        //Debug.Log(Camera.main.fieldOfView);
         //gameObject.GetComponent<Camera>().projectionMatrix = m;
     }
 
@@ -63,18 +72,20 @@ public class CameraFollow : MonoBehaviour
 
         SetCameraPosition();
 
-        if (Input.GetMouseButton(1))
-        {
-            Camera.main.fieldOfView = 10;
-        }
-        else
-        {
-            Camera.main.fieldOfView = 60;
-        }
+        //if (Input.GetMouseButton(1))
+        //{
+        //    Camera.main.fieldOfView = 10;
+        //}
+        //else
+        //{
+        //    Camera.main.fieldOfView = 60;
+        //}
     }
 
     private void SetCameraPosition()
     {
+        float scaledZoom = zoom * resisablePlayer.currentScale;
+
         float angleXRad = angleX * Mathf.Deg2Rad;
         float x = Mathf.Sin(angleXRad);
         float z = Mathf.Cos(angleXRad);
@@ -95,7 +106,7 @@ public class CameraFollow : MonoBehaviour
 
         vec.Normalize();
 
-        Debug.DrawLine(player.transform.position, player.transform.position + vec * zoom, Color.red);
+        Debug.DrawLine(player.transform.position, player.transform.position + vec * scaledZoom, Color.red);
 
         //RaycastHit hit;
         //Vector3 lookAt = player.transform.position;
@@ -130,7 +141,7 @@ public class CameraFollow : MonoBehaviour
         MirrorPlane mirror;
         Vector3 lookAt = player.transform.position;
 
-        Physics.Raycast(player.transform.position, vec, out hit, zoom, Camera.main.cullingMask);
+        Physics.Raycast(player.transform.position, vec, out hit, scaledZoom, Camera.main.cullingMask);
 
         //if (player.crossingMirror != null && player.crossingMirror.plane.GetSide(player.transform.position) == false)
         //{
@@ -149,7 +160,7 @@ public class CameraFollow : MonoBehaviour
             {
                 isLookingThroughMirrorCurrentFrame = true;
                 Vector3 playerToMirrorVector = hit.point - player.transform.position;
-                transform.position = hit.point + Vector3.Reflect(vec, mirror.plane.normal) * (zoom - playerToMirrorVector.magnitude);
+                transform.position = hit.point + Vector3.Reflect(vec, mirror.plane.normal) * (scaledZoom - playerToMirrorVector.magnitude);
                 lookAt = hit.point;
                 currentMirror = mirror;
             }
@@ -168,7 +179,7 @@ public class CameraFollow : MonoBehaviour
         //}
         else
         {
-            transform.position = player.transform.position + vec * zoom;
+            transform.position = player.transform.position + vec * scaledZoom;
         }
 
         if (isLookingThroughMirrorCurrentFrame != isLookingThroughMirror)
@@ -183,12 +194,16 @@ public class CameraFollow : MonoBehaviour
         //transform.LookAt(lookAt);
         transform.rotation = Quaternion.LookRotation(lookAt - transform.position, up);
 
+        transform.position = Vector3.Lerp(transform.position, player.transform.position, distancePadding);
+
         return;
     }
 
     public bool IsLookingThroughTheMirror()
     {
         return isLookingThroughMirror;
+
+        float scaledZoom = zoom * resisablePlayer.currentScale;
 
         float angleXRad = angleX * Mathf.Deg2Rad;
         float x = Game.Current().isFlipped ? Mathf.Cos(angleXRad) : Mathf.Sin(angleXRad);
@@ -201,7 +216,7 @@ public class CameraFollow : MonoBehaviour
         MirrorPlane mirror;
         Vector3 lookAt = player.transform.position;
 
-        Physics.Raycast(player.transform.position, vec, out hit, zoom, Camera.main.cullingMask);
+        Physics.Raycast(player.transform.position, vec, out hit, scaledZoom, Camera.main.cullingMask);
 
         if (hit.collider && hit.collider.gameObject.TryGetComponent(out mirror))
         {
