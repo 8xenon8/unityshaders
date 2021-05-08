@@ -2,34 +2,23 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
+using RailGeneration;
 
-[CustomEditor(typeof(Rail))]
+[CustomEditor(typeof(RouteCalculator))]
 [ExecuteInEditMode]
 public class RailGenerator : Editor
 {
-    private Rail rail;
+    private RouteCalculator rail;
     private Transform handleTransform;
 
-    private Vector3 newPoint = Vector3.forward;
-
-    // Start is called before the first frame update
-    void Start()
-    {
-
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
+    private Vector3 transformLocalPoint = Vector3.forward;
 
     private void OnSceneGUI()
     {
-        rail = target as Rail;
+        rail = target as RouteCalculator;
         handleTransform = rail.transform;
 
-        Vector3 tmpPoint = handleTransform.TransformPoint(newPoint);
+        Vector3 tmpPoint = handleTransform.TransformPoint(transformLocalPoint);
 
         EditorGUI.BeginChangeCheck();
 
@@ -39,21 +28,44 @@ public class RailGenerator : Editor
         {
             //Undo.RecordObject(rail, "Move Point");
             //EditorUtility.SetDirty(rail);
-            newPoint = handleTransform.InverseTransformPoint(tmpPoint);
+            transformLocalPoint = handleTransform.InverseTransformPoint(tmpPoint);
         }
 
-        List<Vector3> points = rail.CalculateRouteToPoint(newPoint);
+        List<Vector3>[] pointsAll = rail.CalculateRouteToPoint(transformLocalPoint);
 
-        Handles.color = Color.red;
-        Handles.DrawLine(handleTransform.position + handleTransform.right, handleTransform.position - handleTransform.right);
-        Handles.DrawLine(handleTransform.position, handleTransform.position + handleTransform.forward);
+        if (pointsAll.Length == 0) {
+            return;
+        }
 
-        for (int i = 1; i < points.Count; i++) {
+        List<Vector3> points = pointsAll[0];
+
+        for (int i = 1; i < points.Count; i++)
+        {
             Handles.color = Color.green;
             Handles.DrawLine(rail.transform.TransformPoint(points[i - 1]), rail.transform.TransformPoint(points[i]));
         }
-        Handles.DrawLine(rail.transform.TransformPoint(points[points.Count - 1]), rail.transform.TransformPoint(points[1]));
 
-        Handles.DrawWireArc(handleTransform.TransformPoint(points[1]), Vector3.up, Vector3.forward, 360f, rail.railWidth / 2f + rail.rotationSpacing);
+        points = pointsAll[1];
+
+        for (int i = 1; i < points.Count; i++)
+        {
+            Handles.color = Color.green;
+            Handles.DrawLine(rail.transform.TransformPoint(points[i - 1]), rail.transform.TransformPoint(points[i]));
+        }
+    }
+
+    public override void OnInspectorGUI()
+    {
+        base.OnInspectorGUI();
+
+        if (GUILayout.Button("Add segment")) {
+            rail.CreateSegment(transformLocalPoint);
+        }
+
+        if (GUILayout.Button("Reset"))
+        {
+            rail.Reset();
+            this.transformLocalPoint = Vector3.forward;
+        }
     }
 }
