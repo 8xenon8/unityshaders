@@ -17,40 +17,57 @@ public class RailGenerator : Editor
     {
         rail = target as RouteCalculator;
         handleTransform = rail.transform;
+        List<GameObject> points = rail.points;
+
+        MeshManager meshManager = new MeshManager();
+
+        foreach (GameObject point in points)
+        {
+            Vector3 position = point.transform.position;
+            point.transform.position = Handles.DoPositionHandle(point.transform.position, point.transform.rotation);
+        }
+
+        List<RouteCalculator.Segment> segments = new List<RouteCalculator.Segment>();
+
+        if (points.Count >= 2)
+        {
+            for (int i = 1; i < points.Count; i++)
+            {
+                List<RouteCalculator.Segment> routePoints = rail.CalculateRouteToPoint(
+                    points[i - 1].transform,
+                    rail.transform.InverseTransformPoint(points[i].transform.position)
+                );
+
+                //MeshFilter r = points[i - 1].GetComponent<MeshFilter>();
+
+                meshManager.CalculateMesh(routePoints, points[i - 1], rail.railWidth, rail.railWidth, rail.railRadius);
+
+                segments.AddRange(routePoints);
+
+                points[i].transform.LookAt(
+                    points[i].transform.position + routePoints[routePoints.Count - 1].direction,
+                    Vector3.up
+                );
+            }
+
+            for (int j = 1; j < segments.Count; j++)
+            {
+                Handles.color = Color.red;
+                Handles.DrawLine(
+                    rail.transform.TransformPoint(segments[j - 1].position),
+                    rail.transform.TransformPoint(segments[j].position)
+                );
+                Handles.color = Color.white;
+            }
+        }
 
         Vector3 tmpPoint = handleTransform.TransformPoint(transformLocalPoint);
 
         EditorGUI.BeginChangeCheck();
 
-        tmpPoint = Handles.DoPositionHandle(tmpPoint, Quaternion.identity);
-
         if (EditorGUI.EndChangeCheck())
         {
-            //Undo.RecordObject(rail, "Move Point");
-            //EditorUtility.SetDirty(rail);
             transformLocalPoint = handleTransform.InverseTransformPoint(tmpPoint);
-        }
-
-        List<Vector3>[] pointsAll = rail.CalculateRouteToPoint(transformLocalPoint);
-
-        if (pointsAll.Length == 0) {
-            return;
-        }
-
-        List<Vector3> points = pointsAll[0];
-
-        for (int i = 1; i < points.Count; i++)
-        {
-            Handles.color = Color.green;
-            Handles.DrawLine(rail.transform.TransformPoint(points[i - 1]), rail.transform.TransformPoint(points[i]));
-        }
-
-        points = pointsAll[1];
-
-        for (int i = 1; i < points.Count; i++)
-        {
-            Handles.color = Color.green;
-            Handles.DrawLine(rail.transform.TransformPoint(points[i - 1]), rail.transform.TransformPoint(points[i]));
         }
     }
 
@@ -58,14 +75,20 @@ public class RailGenerator : Editor
     {
         base.OnInspectorGUI();
 
-        if (GUILayout.Button("Add segment")) {
-            rail.CreateSegment(transformLocalPoint);
-        }
+        //if (GUILayout.Button("Add segment")) {
+        //    rail.CreateSegment(transformLocalPoint);
+        //}
 
         if (GUILayout.Button("Reset"))
         {
             rail.Reset();
-            this.transformLocalPoint = Vector3.forward;
+            transformLocalPoint = Vector3.forward;
+        }
+
+        if (GUILayout.Button("Add segment"))
+        {
+            rail.AddSegment();
+            transformLocalPoint = Vector3.forward;
         }
     }
 }
