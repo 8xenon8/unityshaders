@@ -6,8 +6,6 @@ namespace RailGeneration
 {
     public class MeshManager
     {
-        private Mesh m;
-
         public Dictionary<string, List<Vector3>> ConvertSegmentToMeshVertices(
             RouteCalculator.Segment segment,
             float railwayWidth,
@@ -45,14 +43,18 @@ namespace RailGeneration
             };
         }
 
-        public void CalculateMesh(List<RouteCalculator.Segment> routeSegments, GameObject go, float railWidthFrom, float railWidthTo, float railRadius)
-        {
-            m = new Mesh();
+        public void CalculateMesh(
+            List<RouteCalculator.Segment> routeSegments,
+            Transform transform,
+            float railWidthFrom,
+            float railWidthTo,
+            float railRadius
+        ) {
+            Mesh m = new Mesh();
 
             int facesCount = 6; // @TODO: Change int constant to variable to make it possible to set the number of faces of rail
             Vector3[] vertices =  new Vector3[routeSegments.Count * facesCount * 2];
             int arrayCounter = 0;
-            Transform tr = go.transform;
 
             for (int i = 0; i < routeSegments.Count; i++) {
                 RouteCalculator.Segment segment = routeSegments[i];
@@ -63,8 +65,8 @@ namespace RailGeneration
                 );
 
                 for (int j = 0; j < verticesTotal["right"].Count; j++) {
-                    vertices[arrayCounter] = tr.InverseTransformPoint(tr.parent.TransformPoint(verticesTotal["right"][j]));
-                    vertices[routeSegments.Count * facesCount + arrayCounter] = tr.InverseTransformPoint(tr.parent.TransformPoint(verticesTotal["left"][j]));
+                    vertices[arrayCounter] = transform.InverseTransformPoint(transform.parent.TransformPoint(verticesTotal["right"][j]));
+                    vertices[routeSegments.Count * facesCount + arrayCounter] = transform.InverseTransformPoint(transform.parent.TransformPoint(verticesTotal["left"][j]));
                     arrayCounter++;
                 }
             }
@@ -125,14 +127,17 @@ namespace RailGeneration
                 triangles.Add(i + 5);
             }
 
+            //m.vertices[m.vertices.Length - 4] = new Vector3(routeSegments[0].position);
+
             m.SetVertices(vertices);
             m.triangles = triangles.ToArray();
 
             m.RecalculateTangents();
+            m.RecalculateBounds();
             m.RecalculateNormals();
 
-            go.GetComponent<MeshFilter>().sharedMesh = m;
-            go.GetComponent<MeshCollider>().sharedMesh = m;
+            transform.gameObject.GetComponent<MeshFilter>().sharedMesh = m;
+            transform.gameObject.GetComponent<MeshCollider>().sharedMesh = m;
         }
     }
 }

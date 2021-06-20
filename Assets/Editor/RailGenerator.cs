@@ -40,7 +40,27 @@ public class RailGenerator : Editor
 
                 //MeshFilter r = points[i - 1].GetComponent<MeshFilter>();
 
-                meshManager.CalculateMesh(routePoints, points[i - 1], rail.railWidth, rail.railWidth, rail.railRadius);
+                meshManager.CalculateMesh(routePoints, points[i - 1].transform, rail.railWidth, rail.railWidth, rail.railRadius);
+
+                //if (i > 1) {
+                //    MeshFilter meshFilter = points[i - 1].gameObject.GetComponent<MeshFilter>();
+
+                //    Mesh currentMesh = meshFilter.sharedMesh;
+                //    Mesh previousMesh = points[i - 2].GetComponent<MeshFilter>().sharedMesh;
+                //    Vector3[] vertices = currentMesh.vertices;
+
+                //    for (int j = 12; j > 0; j--) {
+                //        vertices[currentMesh.vertices.Length - j - 1] = previousMesh.vertices[j] + Vector3.one;
+                //    }
+
+                //    currentMesh.SetVertices(vertices);
+
+                //    currentMesh.RecalculateNormals();
+                //    currentMesh.RecalculateTangents();
+                //    currentMesh.RecalculateBounds();
+
+                //    meshFilter.sharedMesh = currentMesh;
+                //}
 
                 segments.AddRange(routePoints);
 

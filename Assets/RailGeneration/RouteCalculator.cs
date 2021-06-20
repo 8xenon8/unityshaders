@@ -32,17 +32,6 @@ namespace RailGeneration
 
         private LinkedList<Segment> segmentLinkedList = new LinkedList<Segment>();
 
-        // Start is called before the first frame update
-        void Start()
-        {
-        }
-
-        // Update is called once per frame
-        void Update()
-        {
-
-        }
-
         public List<Segment> CalculateRouteToPoint(Transform startFrom, Vector3 point)
         {
             List<Segment> segments = new List<Segment>();
@@ -54,6 +43,8 @@ namespace RailGeneration
                 startFrom.up,
                 lastSegmentDirection
             ).normalized;
+
+            float deltaHeight = (point - lastSegmentPosition).y;
 
             Plane horizontalPlaneLocal = new Plane(Vector3.up, lastSegmentPosition);
             Plane verticalPlaneLocal = new Plane(rightLocal, lastSegmentPosition);
@@ -67,19 +58,8 @@ namespace RailGeneration
 
             segments.Add(new Segment(lastSegmentPosition, lastSegmentDirection, lastSegmentUp));
 
-            //rightTrack.AddRange(GetMeshVerticesForDirection(lastSegmentPosition - newPointPerpendicularDirection * railWidth / 2, lastSegmentDirection, lastSegmentUp));
-            //leftTrack.AddRange(GetMeshVerticesForDirection(lastSegmentPosition + newPointPerpendicularDirection * railWidth / 2, lastSegmentDirection, lastSegmentUp));
-
-            // new point is straight ahead
-            if (newPointPerpendicularDirection.magnitude == 0)
-            {
-                //rightTrack.AddRange(
-                //    GetMeshVerticesForDirection(point + rightLocal * railWidth / 2, lastSegmentDirection, Vector3.up)
-                //);
-                //leftTrack.AddRange(
-                //    GetMeshVerticesForDirection(point - rightLocal * railWidth / 2, lastSegmentDirection, Vector3.up)
-                //);
-
+            // if new point is straight ahead
+            if (newPointPerpendicularDirection.magnitude == 0) {
                 segments.Add(new Segment(
                     point,
                     lastSegmentDirection,
@@ -92,19 +72,15 @@ namespace RailGeneration
             float rotationCircleRadius = railWidth / 2f + rotationSpacing;
 
             Vector3 rotationCenter = lastSegmentPosition +
-                newPointPerpendicularDirection * rotationCircleRadius +
-                lastSegmentDirection.normalized * rotationCircleRadius;
+                newPointPerpendicularDirection * rotationCircleRadius;
 
             Vector3 hypotenuseVector = Vector3.ProjectOnPlane(point - rotationCenter, horizontalPlaneLocal.normal);
 
-            if (hypotenuseVector.magnitude < rotationCircleRadius)
-            {
+            if (hypotenuseVector.magnitude < rotationCircleRadius) {
                 rotationCircleRadius = hypotenuseVector.magnitude;
 
-                //return new List<Segment>();
                 rotationCenter = lastSegmentPosition +
-                newPointPerpendicularDirection * rotationCircleRadius +
-                lastSegmentDirection.normalized * rotationCircleRadius;
+                newPointPerpendicularDirection * rotationCircleRadius;
             }
 
             float perpendicularToTangentAngle = Mathf.Acos(rotationCircleRadius / hypotenuseVector.magnitude) * Mathf.Rad2Deg * -directionSign;
@@ -115,23 +91,31 @@ namespace RailGeneration
             rotatedVector = rotatedVector.normalized * rotationCircleRadius;
 
             float resultAngle = Vector3.Angle(lastSegmentDirection, hypotenuseVector - rotatedVector);
-            if (Vector3.Dot(lastSegmentDirection, rotatedVector) < 0)
-            {
+            if (Vector3.Dot(lastSegmentDirection, rotatedVector) < 0) {
                 resultAngle = 360f - resultAngle;
             }
+
+            float straighPartLength = Mathf.Sin(Mathf.Abs(perpendicularToTangentAngle * Mathf.Deg2Rad)) * hypotenuseVector.magnitude;
+            float rotatedPartLength = rotationCircleRadius * 2 * Mathf.PI * (resultAngle / 360);
+            float rotatedToStraightRatio = rotatedPartLength / straighPartLength;
+
+            //Debug.DrawLine(transform.TransformPoint(point), transform.TransformDirection(rotationCenter - point), );
 
             Vector3 initialSegmentPosition = rotationCenter - newPointPerpendicularDirection * rotationCircleRadius;
             Vector3 currentSegmentPosition = initialSegmentPosition;
 
-            int segmentCount = (int)Mathf.Ceil(resultAngle / 5f);
+            int segmentCount = (int)Mathf.Ceil(resultAngle / 2f);
 
             float anglePerSegment = resultAngle / segmentCount;
             Vector3 perpendicularVectorToRailAtCurrentPoint;
 
-            for (int i = 0; i < segmentCount; i++)
-            {
+            for (int i = 0; i < segmentCount; i++) {
                 currentSegmentPosition = RotatePointAroundPivot(initialSegmentPosition, rotationCenter, new Vector3(0, anglePerSegment * directionSign * i, 0));
                 perpendicularVectorToRailAtCurrentPoint = (currentSegmentPosition - rotationCenter).normalized * railWidth / 2f;
+
+                float currentHeight = deltaHeight * (rotatedPartLength / (straighPartLength + rotatedPartLength)) * ((float)i / segmentCount);
+                //Debug.Log(currentHeight);
+                currentSegmentPosition.y += currentHeight;
 
                 segments.Add(new Segment(
                     currentSegmentPosition,
@@ -193,8 +177,7 @@ namespace RailGeneration
             segmentLinkedList = new LinkedList<Segment>();
 
             int childCount = transform.childCount;
-            for (int i = 0; i < childCount; i++)
-            {
+            for (int i = 0; i < childCount; i++) {
                 DestroyImmediate(transform.GetChild(0).gameObject);
             }
 
@@ -219,6 +202,11 @@ namespace RailGeneration
             p.transform.localPosition = lastPointTransform.localPosition + lastPointTransform.forward * 5;
 
             points.Add(p);
+        }
+
+        private float easeInOutQuad(float x)
+        {
+            return x < 0.5f ? 2 * x * x : 1 - Mathf.Pow(-2 * x + 2, 2) / 2;
         }
     }
 }
